@@ -48,22 +48,20 @@ main()
 	//init devece
 	gpio create(devptr, RX,TX);
 	//init frame
-	transmitter sender;
-	dataFrame local;
-	dataFrame *frame = &local;
+	transmitter* sender = new transmitter ;
+	dataFrame* local = new dataFrame;
+
 	//frame->data.dataptr = sender.reserveMem(BLOCKSIZE);
-	sender.initFrame(souptr,desptr,fileptr,frame);
+	sender->initFrame(souptr,desptr,fileptr,local);
 	create.createDatalines();
-	sender.sendPacket(frame, create);
+	sender->sendPacket(local, create);
 	//sender.printFrame(frame);
-	for (int i = 3; i > -1; i--)
-	{
-	std::cout<<int(local.head.datalen[i]);
-	}
+	delete(sender);
+	delete(local);
 /*	create.createDatalines();
 	create.writeData(0xAA);
 	create.readData();
- */ cout << "sadf" << endl;
+ */ std::cout << "Happy end!!!" << endl;
 
   return 0;
 }

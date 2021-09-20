@@ -17,25 +17,28 @@ this->dev.tx = tx;
 void gpio::writeData(uint8_t data)
 {
 	int ret;
+	uint8_t temp = 0x00;
+
 	//flip bits
 	for(int i=0; i < 8; i++)
 	{
-		if (data & 0x01)
+		temp = data &(0x80);
+		if (temp > 0)
 		{
 		this->outputdata.values[0] =255;
-		std::cout<<"1";//<<int(outputdata.values[0]);
+	//	std::cout<<"1";//<<int(outputdata.values[0]);
 		}
 		else
 		{
 			this->outputdata.values[0] = 0;
-			std::cout<<"0";//<<int(outputdata.values[0]);
+		//	std::cout<<"0";//<<int(outputdata.values[0]);
 		}
 		ret = ioctl(this->output.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &this->outputdata);
-		data = data >> 1;
+		data = data << 1;
 		/*TODO create real sleep function to set speed*/
-		usleep(500000);
+		usleep(5000);
 	}
-std::cout<<std::endl;
+//std::cout<<std::endl;
 }
 void gpio::readData()
 {
