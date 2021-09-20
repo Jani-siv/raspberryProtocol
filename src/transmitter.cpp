@@ -16,16 +16,20 @@ if (!this->file.is_open())
 	{
 			std::cerr<<"File not open"<<std::endl;
 	}
+std::cout<<"file open normally"<<std::endl;
 this->size = this->getFileSize();
+std::cout<<"size:"<<this->size<<std::endl;
 this->calculateAmountOfPackets();
+std::cout<<"amounts of full packets: "<<this->amountOfPackets<<std::endl;
+std::cout<<"last packet size: "<<this->lastPacketSize<<std::endl;
 }
 
 void transmitter::calculateAmountOfPackets()
 {
 if (this->size % BLOCKSIZE != 0)
 {
-long carry = this->size/BLOCKSIZE;
-this->amountOfPackets= (this->size-carry) / BLOCKSIZE + 1;
+long carry = this->size%BLOCKSIZE;
+this->amountOfPackets= this->size / BLOCKSIZE;
 this->lastPacketSize = carry;
 this->lastNotFullPack=true;
 }
@@ -48,12 +52,11 @@ void transmitter::getPosition()
 }
 long transmitter::getFileSize()
 {
-	long size=0;
+	int length = 0;
 	if(this->file.is_open())
 	{
 		this->file.seekg(0,this->file.end);
-		int length = this->file.tellg();
-		this->size = length;
+		length = this->file.tellg();
 		this->file.seekg(0,this->file.beg);
 	}
 	else
@@ -61,7 +64,7 @@ long transmitter::getFileSize()
 		std::cerr<<"File not open"<<std::endl;
 		return -1;
 	}
-	return size;
+	return length;
 }
 
 void transmitter::clearData(char *data, int len)
@@ -129,10 +132,67 @@ void transmitter::addDataId(dataFrame* frame,int i)
 
 //overflow possibility
 
-void transmitter::sendPacket(dataFrame* frame)
+void transmitter::sendPacket(dataFrame* frame, gpio transfer)
 {
 this->nextData(frame);
+this->createChunkAndSend(frame,transfer);
 }
+
+void transmitter::createChunkAndSend(dataFrame* frame, gpio transfer)
+{
+	//syn
+std::cout<<"syn"<<std::endl;
+transfer.writeData(frame->head.asyn[0]);
+std::cout<<"data start"<<std::endl;
+transfer.writeData(frame->head.dataStart[0]);
+std::cout<<"data id"<<std::endl;
+for (int i = 0; i < 4; i++)
+	{
+transfer.writeData(frame->dataId[i]);
+	}
+std::cout<<"source"<<frame->head.source<<std::endl;
+for (int i = 0; i < 15; i++)
+	{
+transfer.writeData(frame->head.source[i]);
+	}
+std::cout<<"destination"<<frame->head.destination<<std::endl;
+for (int i = 0; i < 15; i++)
+	{
+transfer.writeData(frame->head.destination[i]);
+	}
+std::cout<<"message type"<<std::endl;
+for (int i = 0; i < 4; i++)
+	{
+transfer.writeData(frame->head.messageType[i]);
+	}
+std::cout<<"total packs"<<std::endl;
+for (int i = 0; i < 4; i++)
+	{
+transfer.writeData(frame->head.totalpacks[i]);
+	}
+std::cout<<"datalen"<<std::endl;
+for (int i = 0; i < 4; i++)
+	{
+transfer.writeData(frame->head.datalen[i]);
+	}
+long amountBytes = 0;
+if (this->position < this->amountOfPackets)
+{
+	amountBytes = this->size;
+}
+else {
+	amountBytes = this->lastPacketSize;
+}
+std::cout<<"data: "<<frame->data.dataptr<<std::endl;
+for (int i = 0; i < amountBytes; i++)
+	{
+transfer.writeData(frame->data.dataptr[i]);
+	}
+std::cout<<"end byte"<<std::endl;
+transfer.writeData(frame->head.endOfTransmission[0]);
+
+}
+
 
 void transmitter::dataType(dataFrame* frame,unsigned char* dataType)
 {
@@ -143,9 +203,9 @@ void transmitter::dataType(dataFrame* frame,unsigned char* dataType)
 void transmitter::nextData(dataFrame* frame)
 {
 	char buffer[BLOCKSIZE];
-this->file.read(buffer,BLOCKSIZE*(this->position+1));
+this->file.read(buffer,BLOCKSIZE*(this->position));
 //copy packets in frame
-if (this->position != this->amountOfPackets)
+if (this->position < this->amountOfPackets)
 {
 	for (int i=0; i < BLOCKSIZE; i++)
 	{
@@ -160,8 +220,6 @@ frame->data.dataptr[i] =buffer[i];
 	}
 
 }
-
-std::cout<<frame->data.dataptr<<std::endl;
 //set packet id
 this->convertLongToChar(this->position,frame->dataId,4);
 this->position++;

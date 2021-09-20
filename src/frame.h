@@ -34,7 +34,7 @@ typedef struct header{
  * 50 bytes to data
  */
 typedef struct dataFrame{
-	unsigned char* dataId;	//(long)
+	unsigned char dataId[4];	//(long)
 	char CRC[2];
 	header head;
 	dataPack data;
