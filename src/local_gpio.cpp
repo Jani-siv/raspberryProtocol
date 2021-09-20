@@ -23,19 +23,19 @@ void gpio::writeData(uint8_t data)
 		if (data & 0x01)
 		{
 		this->outputdata.values[0] =255;
-		std::cout<<"high: "<<int(outputdata.values[0])<<std::endl;
+		std::cout<<"1";//<<int(outputdata.values[0]);
 		}
 		else
 		{
 			this->outputdata.values[0] = 0;
-			std::cout<<"low: "<<int(outputdata.values[0])<<std::endl;
+			std::cout<<"0";//<<int(outputdata.values[0]);
 		}
 		ret = ioctl(this->output.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &this->outputdata);
 		data = data >> 1;
 		/*TODO create real sleep function to set speed*/
-		sleep(1);
+		usleep(500000);
 	}
-
+std::cout<<std::endl;
 }
 void gpio::readData()
 {

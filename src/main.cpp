@@ -53,7 +53,8 @@ main()
 	dataFrame *frame = &local;
 	//frame->data.dataptr = sender.reserveMem(BLOCKSIZE);
 	sender.initFrame(souptr,desptr,fileptr,frame);
-	sender.sendPacket(frame);
+	create.createDatalines();
+	sender.sendPacket(frame, create);
 	//sender.printFrame(frame);
 	for (int i = 3; i > -1; i--)
 	{

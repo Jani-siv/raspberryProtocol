@@ -14,8 +14,9 @@
 #include <fstream>
 #include "frame.h"
 #include "bitoperation.h"
+#include "local_gpio.h"
 #define BLOCKSIZE 50
-class transmitter : public bitoperation {
+class transmitter : public bitoperation{
 private:
 	void clearData(char *data, int len);
 
@@ -39,11 +40,12 @@ private:
 	void getPacketCount();
 	long getFileSize();
 	void calculateAmountOfPackets();
+	void createChunkAndSend(dataFrame* frame, gpio transfer);
 	std::ifstream file;
 public:
 	char* reserveMem(int len);
 	void initFrame(char* source, char* destination, char* filename, dataFrame* frame);
-	void sendPacket(dataFrame* frame);
+	void sendPacket(dataFrame* frame, gpio transfer);
 	void initTransmission(char* filename);
 	void printFrame(dataFrame *f);
 	dataFrame frame;
