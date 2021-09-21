@@ -7,13 +7,19 @@
 
 #include "receiver.h"
 
+receiver::receiver(char* address)
+{
+this->address = address;
+
+}
+
 void receiver::transmission(dataFrame* frame)
 {
 	//test if address is correct
 for (int i = 0; i < 15; i++)
 {
 	char temp = frame->head.destination[i];
-	char temp1 = this->deviceIP[i];
+	char temp1 = this->address[i];
 	if (temp != temp1)
 	{
 		std::cout<<"error: "<<temp<<" != "<<temp1<<std::endl;

@@ -14,15 +14,16 @@
 #include <cstring>
 #include <map>
 #include "bitoperation.h"
+#include "local_gpio.h"
 class receiver {
 private:
-	std::string deviceIP = "222.222.222.222";
+	char address[15];
 	bool dataNeedProcess = false;
 	char* dataptr = nullptr;
 	bool dataPackedNum = 0;
 	std::map<int,char*> dataStorage;
 public:
-	receiver(){};
+	receiver(char* address);
 	virtual ~receiver(){};
 	void transmission(dataFrame* frame);
 	int calclen(const char* len);
