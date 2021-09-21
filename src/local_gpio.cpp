@@ -26,27 +26,71 @@ void gpio::writeData(uint8_t data)
 		if (temp > 0)
 		{
 		this->outputdata.values[0] =255;
-	//	std::cout<<"1";//<<int(outputdata.values[0]);
+		std::cout<<"1";//<<int(outputdata.values[0]);
 		}
 		else
 		{
 			this->outputdata.values[0] = 0;
-		//	std::cout<<"0";//<<int(outputdata.values[0]);
+			std::cout<<"0";//<<int(outputdata.values[0]);
 		}
 		ret = ioctl(this->output.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &this->outputdata);
 		data = data << 1;
 		/*TODO create real sleep function to set speed*/
 		usleep(5000);
 	}
-//std::cout<<std::endl;
+std::cout<<std::endl;
 }
-void gpio::readData()
+char* gpio::readData(int bytes)
 {
 	/*timing
 	 * read 8 bit and store those in memory
 	 * because this is for protocol we can reserve memory before reading;
 	 */
-this->getTiming(); 		//used first 8 bits to calculate and return halfway of bit back
+	char * ptr = nullptr;
+	std::cout<<"before memory set"<<std::endl;
+	ptr = (char*)malloc(bytes*sizeof(char));
+	std::cout<<"memory ready to read"<<std::endl;
+	if (this->busSpeed.inputspeed == 0)
+	{
+this->getTiming();
+bytes--; //used first 8 bits to calculate and return halfway of bit back
+	}
+	int j= 0;
+	while (bytes > 0)
+	{
+		uint8_t datablock = 0x00;
+		for (int i = 0; i < 8; i++)
+		{
+			ioctl(this->input.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &this->inputdata);
+			if (inputdata.values[0] > 0)
+			{
+				datablock = datablock + 0x01;
+				if (i < 7)
+					{
+						datablock = datablock << 1;
+
+					}
+				std::cout<<"1";
+			}
+			else
+			{
+				std::cout<<"0";
+				if (i < 7)
+					{
+
+						datablock = datablock << 1;
+					}
+			}
+			usleep(this->busSpeed.inputspeed);
+		}
+		std::cout<<" data: "<<datablock<<std::endl;
+		ptr[j] = datablock;
+	//	std::cout<<"data block: "<<j<<" is stored in memory"<<std::endl;
+		j++;
+		bytes--;
+	}
+
+return ptr;
 }
 
 void gpio::getTiming()
@@ -77,7 +121,8 @@ void gpio::getTiming()
 			std::cout<<"reading speed is: "<<this->busSpeed.inputspeed<<std::endl;
 			std::cout<<"reading speed is: "<<diff.count()<<std::endl;
 			//skip rest of timing
-			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed/2));
+			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.2));
+			this->busSpeed.inputspeed -= 330; //350 ;)
 			break;
 		}
 

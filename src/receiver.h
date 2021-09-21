@@ -15,6 +15,7 @@
 #include <map>
 #include "bitoperation.h"
 #include "local_gpio.h"
+#include "frame.h"
 class receiver {
 private:
 	char address[15];
@@ -25,10 +26,11 @@ private:
 public:
 	receiver(char* address);
 	virtual ~receiver(){};
-	void transmission(dataFrame* frame);
+	void transmission(gpio receiv);
 	int calclen(const char* len);
 	void copyDataToMemory(int len, char* data, int packedNum);
 	int calcNum(char* num);
+	dataFrame frame;
 };
 
 #endif /* RECEIVER_H_ */

@@ -56,11 +56,14 @@ int main(int argc, char *argv[])
 	switch(answer)
 	{
 		case 0:
+			std::cout<<"selected transmitter"<<std::endl;
 			desptr = dev1;
 			souptr = dev2;
+			sender->initFrame(souptr,desptr,fileptr,local);
 			break;
 
 		case 1:
+			std::cout<<"selected receiver"<<std::endl;
 			souptr = dev1;
 			desptr = dev2;
 			break;
@@ -70,7 +73,7 @@ int main(int argc, char *argv[])
 			souptr = dev2;
 			break;
 	}
-	sender->initFrame(souptr,desptr,fileptr,local);
+
 	create.createDatalines();
 	//transmitter part
 	receiver *res = new receiver(souptr);
@@ -81,7 +84,8 @@ int main(int argc, char *argv[])
 	//receiver part
 	else
 	{
-
+		std::cout<<"ready to read"<<std::endl;
+		res->transmission(create);
 		std::cout<<"ready to take packets"<<std::endl;
 	}
 

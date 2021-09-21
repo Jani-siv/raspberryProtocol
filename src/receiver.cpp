@@ -9,13 +9,20 @@
 
 receiver::receiver(char* address)
 {
-this->address = address;
-
+	for (int i=0; i < 15; i++)
+	{
+this->address[i] = address[i];
+	}
 }
 
-void receiver::transmission(dataFrame* frame)
+void receiver::transmission(gpio receiv)
 {
-	//test if address is correct
+
+	char *ptr = nullptr;
+	ptr = receiv.readData(100);
+	std::cout<<"data ready"<<std::endl;
+	std::cout<<"from receiver"<<int(ptr)<<std::endl;
+/*	//test if address is correct
 for (int i = 0; i < 15; i++)
 {
 	char temp = frame->head.destination[i];
@@ -53,6 +60,7 @@ int receiver::calclen(const char* len)
 	length += len[1]*10;
 	length += len[2]*100;
 return length;
+*/
 }
 
 void receiver::copyDataToMemory(int len, char* data,int packedNum)

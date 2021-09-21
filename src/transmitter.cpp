@@ -141,36 +141,36 @@ this->createChunkAndSend(frame,transfer);
 void transmitter::createChunkAndSend(dataFrame* frame, gpio transfer)
 {
 	//syn
-std::cout<<"syn"<<std::endl;
+//std::cout<<"syn"<<std::endl;
 transfer.writeData(frame->head.asyn[0]);
-std::cout<<"data start"<<std::endl;
+//std::cout<<"data start"<<std::endl;
 transfer.writeData(frame->head.dataStart[0]);
-std::cout<<"data id"<<std::endl;
+//std::cout<<"data id"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
 transfer.writeData(frame->dataId[i]);
 	}
-std::cout<<"source"<<frame->head.source<<std::endl;
+//std::cout<<"source"<<frame->head.source<<std::endl;
 for (int i = 0; i < 15; i++)
 	{
 transfer.writeData(frame->head.source[i]);
 	}
-std::cout<<"destination"<<frame->head.destination<<std::endl;
+//std::cout<<"destination"<<frame->head.destination<<std::endl;
 for (int i = 0; i < 15; i++)
 	{
 transfer.writeData(frame->head.destination[i]);
 	}
-std::cout<<"message type"<<std::endl;
+//std::cout<<"message type"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
 transfer.writeData(frame->head.messageType[i]);
 	}
-std::cout<<"total packs"<<std::endl;
+//std::cout<<"total packs"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
 transfer.writeData(frame->head.totalpacks[i]);
 	}
-std::cout<<"datalen"<<std::endl;
+//std::cout<<"datalen"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
 transfer.writeData(frame->head.datalen[i]);
@@ -183,12 +183,12 @@ if (this->position < this->amountOfPackets)
 else {
 	amountBytes = this->lastPacketSize;
 }
-std::cout<<"data: "<<frame->data.dataptr<<std::endl;
+//std::cout<<"data: "<<frame->data.dataptr<<std::endl;
 for (int i = 0; i < amountBytes; i++)
 	{
 transfer.writeData(frame->data.dataptr[i]);
 	}
-std::cout<<"end byte"<<std::endl;
+//std::cout<<"end byte"<<std::endl;
 transfer.writeData(frame->head.endOfTransmission[0]);
 
 }

@@ -23,6 +23,7 @@
 #include <iostream>
 #include <string.h>
 #include <chrono>
+#include "frame.h"
 
 class gpio {
 public:
@@ -30,8 +31,8 @@ int createDatalines();
 gpio(char* dev, __u32 rx, __u32 tx);
 typedef struct timing
 {
-	long inputspeed;
-	double outputspeed;
+	long inputspeed = 0;
+	double outputspeed= 0;
 }timing;
 typedef struct devcfg
 {
@@ -40,7 +41,7 @@ __u32 rx;
 __u32 tx;
 }devcfg;
 void writeData(uint8_t data);
-void readData();
+char* readData(int bytes);
 void getTiming();
 private:
 timing busSpeed;
