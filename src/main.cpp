@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
 	create.createDatalines();
 	//transmitter part
-	receiver *res = new receiver(souptr);
+	receiver *res = new receiver(souptr, fileptr);
 	if(answer == 0)
 	{
 	sender->sendPacket(local, create);

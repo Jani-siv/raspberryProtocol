@@ -22,9 +22,12 @@
 #include <stdbool.h>
 #include <cstring>
 #include <map>
+#include <fstream>
 #include "bitoperation.h"
 #include "local_gpio.h"
 #include "frame.h"
+
+
 class receiver {
 private:
 	char answerAddress[15] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
@@ -34,13 +37,18 @@ private:
 	bool dataPackedNum = 0;
 	std::map<int,char*> dataStorage;
 	void setAllToFrame(char* ptr);
+	void storeDataToFile();
+	char* fileptr = nullptr;
+	std::ofstream file;
+	void createFile();
 public:
-	receiver(char* address);
+	receiver(char* address, char *filename);
 	virtual ~receiver(){};
 	void transmission(gpio receiv);
 	int calclen(const char* len);
 	void copyDataToMemory(int len, char* data, int packedNum);
 	int calcNum(char* num);
+
 	dataFrame frame;
 };
 

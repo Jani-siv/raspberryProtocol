@@ -7,12 +7,13 @@
 
 #include "receiver.h"
 
-receiver::receiver(char* address)
+receiver::receiver(char* address, char* filename)
 {
 	for (int i=0; i < 15; i++)
 	{
 this->address[i] = address[i];
 	}
+	this->fileptr = filename;
 }
 void receiver::setAllToFrame(char* ptr)
 {
@@ -56,49 +57,39 @@ void receiver::transmission(gpio receiv)
 
 	char *ptr = nullptr;
 	ptr = receiv.readData(100);
+	bool store = true;
+	for (int i= 0; i < 15; i++)
+	{
+		if (ptr[DESTINATION+i] != this->address[i])
+		{
+			store = false;
+		}
+	}
+	if (store == true)
+	{
 	this->setAllToFrame(ptr);
+	this->createFile();
+	this->file << this->frame.data.data;
+	this->file.close();
+	}
+	//check data crc and respond to sender
+	if (store == false)
+	{
+		std::cout<<"wrong destination address! discarding packets"<<std::endl;
+	}
 	std::cout<<"data ready"<<std::endl;
 	std::cout<<"from receiver"<<int(ptr)<<std::endl;
 
-/*	//test if address is correct
-for (int i = 0; i < 15; i++)
-{
-	char temp = frame->head.destination[i];
-	char temp1 = this->address[i];
-	if (temp != temp1)
-	{
-		std::cout<<"error: "<<temp<<" != "<<temp1<<std::endl;
-		this->dataNeedProcess = false;
-		break;
-	}
-	else
-	{
-		this->dataNeedProcess = true;
-	}
-}
-if (this->dataNeedProcess == true)
-{
-//get data len
-char datalen[3];
-char packedNum[5];
-//find cleaner style copy char
-datalen[0] =frame->head.datalen[0];
-datalen[1] =frame->head.datalen[1];
-datalen[2] =frame->head.datalen[2];
-int len = calclen(datalen);
-int num = calcNum(packedNum);
-copyDataToMemory(len,frame->data.dataptr, num);
-}
-}
 
-int receiver::calclen(const char* len)
+}
+void receiver::createFile()
 {
-	int length=0;
-	length = len[0];
-	length += len[1]*10;
-	length += len[2]*100;
-return length;
-*/
+//create or append file
+this->file.open(this->fileptr,std::ofstream::out | std::ofstream::app);
+if (!this->file.is_open())
+{
+	std::cerr<<"error open file!!"<<std::endl;
+}
 }
 
 void receiver::copyDataToMemory(int len, char* data,int packedNum)
