@@ -7,6 +7,15 @@
 
 #ifndef RECEIVER_H_
 #define RECEIVER_H_
+#define DATASTART 0
+#define DATAID 0
+#define SOURCE 5
+#define DESTINATION 20
+#define MESSAGETYPE 35
+#define TOTALPACKS 39
+#define DATALEN 43
+#define DATA 47
+#define ENDTRANS 97
 #include "frame.h"
 #include <iostream>
 #include <string>
@@ -18,11 +27,13 @@
 #include "frame.h"
 class receiver {
 private:
-	char address[15];
+	char answerAddress[15] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+	char address[15] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	bool dataNeedProcess = false;
 	char* dataptr = nullptr;
 	bool dataPackedNum = 0;
 	std::map<int,char*> dataStorage;
+	void setAllToFrame(char* ptr);
 public:
 	receiver(char* address);
 	virtual ~receiver(){};

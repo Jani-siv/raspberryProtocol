@@ -14,14 +14,52 @@ receiver::receiver(char* address)
 this->address[i] = address[i];
 	}
 }
+void receiver::setAllToFrame(char* ptr)
+{
+	//allocate memory for pointers
 
+	for (int i = 0; i < 15; i++)
+	{
+		this->answerAddress[i] = ptr[SOURCE+i];
+	//	this->frame.head.destination[i] = ptr[DESTINATION+i]; check if it's valid
+		//std::cout<<this->frame.head.source[i];
+	}
+	//change address source to destination for answering purpose
+	this->frame.head.destination = this->answerAddress;
+
+	for (int i = 0; i < 4; i++)
+	{
+		this->frame.dataId[i] = ptr[DATAID+i];
+		this->frame.head.messageType[i] = ptr[MESSAGETYPE+i];
+		this->frame.head.totalpacks[i] = ptr[TOTALPACKS+i];
+		this->frame.head.datalen[i] =	ptr[DATALEN+i];
+	}
+
+	this->frame.head.endOfTransmission[0] = ptr[ENDTRANS];
+
+	for (int i =0; i < 50; i++)
+	{
+		this->frame.data.data[i] = ptr[DATA+i];
+	}
+	for(int i=0; i < 15; i++)
+	{
+	std::cout<<this->frame.head.destination[i];
+	}
+	std::cout<<std::endl;
+	char* data;
+	data = this->frame.data.data;
+	std::cout<<data<<std::endl;
+std::cout<<"end storing"<<std::endl;
+}
 void receiver::transmission(gpio receiv)
 {
 
 	char *ptr = nullptr;
 	ptr = receiv.readData(100);
+	this->setAllToFrame(ptr);
 	std::cout<<"data ready"<<std::endl;
 	std::cout<<"from receiver"<<int(ptr)<<std::endl;
+
 /*	//test if address is correct
 for (int i = 0; i < 15; i++)
 {

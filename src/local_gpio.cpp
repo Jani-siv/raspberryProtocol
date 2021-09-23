@@ -121,8 +121,8 @@ void gpio::getTiming()
 			std::cout<<"reading speed is: "<<this->busSpeed.inputspeed<<std::endl;
 			std::cout<<"reading speed is: "<<diff.count()<<std::endl;
 			//skip rest of timing
-			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.2));
-			this->busSpeed.inputspeed -= 330; //350 ;)
+			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.3));
+			this->busSpeed.inputspeed -= this->busSpeed.inputspeed %5000; //350 ;)
 			break;
 		}
 
