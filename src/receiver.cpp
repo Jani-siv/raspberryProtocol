@@ -68,7 +68,9 @@ void receiver::transmission(gpio receiv)
 	if (store == true)
 	{
 	this->setAllToFrame(ptr);
+	//here check CRC
 	this->createFile();
+	//copy only length of data
 	this->file << this->frame.data.data;
 	this->file.close();
 	}
