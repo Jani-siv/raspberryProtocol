@@ -109,10 +109,10 @@ while(this->currentPacket != this->totalPackets)
 
 	this->sendAnswer(0x00,0x00);
 	}
-	if (datatype == 0x00)
+	if (datatype == 0)
 	{
 		uint8_t message = ptr[DATA];
-		if ( message == 0x00)
+		if ( message == 0)
 		{
 			std::cout<<"sending next packet"<<std::endl;
 			return 1;

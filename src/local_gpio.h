@@ -24,6 +24,7 @@
 #include <string.h>
 #include <chrono>
 #include "frame.h"
+#define TIMEOUT 5.0
 
 class gpio {
 public:

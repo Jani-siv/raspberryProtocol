@@ -142,7 +142,7 @@ void transmitter::sendPacket(dataFrame* frame, gpio *transfer, int type)
 this->nextData(frame);
 	}
 this->createChunkAndSend(frame,transfer);
-
+//only for transmitter
 if (type == 0)
 {
 	std::chrono::duration<double> diff;
@@ -154,6 +154,7 @@ if (type == 0)
 receiver res(addr,nullptr,this->dataline);
 int next = 0;
 std::cout<<"start waiting answer"<<std::endl;
+
 while (next != 1)
 {
 	std::cout<<"waiting answer"<<std::endl;
@@ -171,6 +172,7 @@ if (next == 0)
 }
 std::cout<<"exiting from sendPacket"<<std::endl;
 this->position++;
+
 }
 }
 void transmitter::createChunkAndSend(dataFrame* frame, gpio *transfer)
@@ -267,6 +269,10 @@ void transmitter::initFrame(char* source, char* destination, char* filename, dat
 	if (filename != nullptr)
 	{
 	this->initTransmission(filename);
+	for (int i=0; i < 15; i++)
+	{
+		this->address[i] = source[i];
+	}
 	}
 	//add packed id
 	this->addDataId(frame,this->position);

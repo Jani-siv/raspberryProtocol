@@ -123,7 +123,7 @@ void gpio::getTiming()
 			auto start =std::chrono::high_resolution_clock::now();
 		while (inputdata.values[0] > 0)
 		{
-			std::cout<<int(inputdata.values[0])<<std::endl;
+		//	std::cout<<int(inputdata.values[0])<<std::endl;
 			ioctl(this->input.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &this->inputdata);
 			end = std::chrono::high_resolution_clock::now();
 		}
@@ -141,15 +141,17 @@ void gpio::getTiming()
 			this->busSpeed.inputspeed -= this->busSpeed.inputspeed %5000; //350 ;)
 			break;
 		}
+		if (startTiming == false)
+		{
 		timeoutEnd = std::chrono::high_resolution_clock::now();
 		timeout = timeoutEnd - end;
 		double temp = timeout.count();
 		//std::cout<<"temp: "<<temp<<std::endl;
-		if (temp > 3.0)
+		if (temp > TIMEOUT)
 		{
 			this->timeout = true;
 			startTiming = true;
-		}
+		}}
 	//	std::cout<<"timeout count"<<timeout.count()<<std::endl;
 	}
 }
