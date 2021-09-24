@@ -152,13 +152,16 @@ if (type == 0)
 	char *addr;
 	addr = this->address;
 receiver res(addr,nullptr,this->dataline);
+res.timeouttime= 2;
 int next = 0;
 std::cout<<"start waiting answer"<<std::endl;
-
+int breakWaiting = 0;
 while (next != 1)
-{
+{ if (breakWaiting > 5)
+{break;}
 	std::cout<<"waiting answer"<<std::endl;
 	next = res.transmission();
+	breakWaiting++;
 if (next == -1)
 {
 	std::cout<<"sending packet again"<<std::endl;

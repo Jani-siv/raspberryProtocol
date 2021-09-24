@@ -8,7 +8,7 @@
 #ifndef BITOPERATION_H_
 #define BITOPERATION_H_
 
-
+#include <iostream>
 class bitoperation{
 public:
 	bitoperation();

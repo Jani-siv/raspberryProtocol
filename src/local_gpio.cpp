@@ -40,7 +40,7 @@ void gpio::writeData(uint8_t data)
 	}
 std::cout<<std::endl;
 }
-char* gpio::readData(int bytes)
+char* gpio::readData(int bytes, int timeout)
 {
 	/*timing
 	 * read 8 bit and store those in memory
@@ -50,7 +50,7 @@ char* gpio::readData(int bytes)
 	ptr = (char*)malloc(bytes*sizeof(char));
 	if (this->busSpeed.inputspeed == 0)
 	{
-this->getTiming();
+this->getTiming(timeout);
 	}
 if (this->timeout == true)
 {
@@ -105,9 +105,9 @@ int j= 0;
 return ptr;
 }
 
-void gpio::getTiming()
+void gpio::getTiming(int timeout)
 {
-	std::chrono::duration<double> diff, timeout;
+	std::chrono::duration<double> diff, timeout1;
 
 
 	auto end = std::chrono::high_resolution_clock::now();
@@ -144,10 +144,10 @@ void gpio::getTiming()
 		if (startTiming == false)
 		{
 		timeoutEnd = std::chrono::high_resolution_clock::now();
-		timeout = timeoutEnd - end;
-		double temp = timeout.count();
+		timeout1 = timeoutEnd - end;
+		double temp = timeout1.count();
 		//std::cout<<"temp: "<<temp<<std::endl;
-		if (temp > TIMEOUT)
+		if (temp > timeout)
 		{
 			this->timeout = true;
 			startTiming = true;
