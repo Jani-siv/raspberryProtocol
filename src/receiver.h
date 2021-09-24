@@ -26,21 +26,30 @@
 #include "bitoperation.h"
 #include "local_gpio.h"
 #include "frame.h"
+#include "bitoperation.h"
+#include "transmitter.h"
 
 
-class receiver {
+class receiver : public bitoperation {
 private:
 	char answerAddress[15] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	char address[15] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	bool dataNeedProcess = false;
 	char* dataptr = nullptr;
 	bool dataPackedNum = 0;
+	long totalPackets =0;
+	long currentPacket = 0;
 	std::map<int,char*> dataStorage;
 	void setAllToFrame(char* ptr);
 	void storeDataToFile();
 	char* fileptr = nullptr;
 	std::ofstream file;
 	void createFile();
+	void addPacketToMap();
+	void testPacketsInMap();
+	void addTotalAmount();
+	void updateCurrentPacket();
+	void sendAnswer(uint8_t status, uint8_t message);
 public:
 	receiver(char* address, char *filename);
 	virtual ~receiver(){};

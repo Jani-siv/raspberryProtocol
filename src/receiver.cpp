@@ -47,14 +47,18 @@ void receiver::setAllToFrame(char* ptr)
 	std::cout<<this->frame.head.destination[i];
 	}
 	std::cout<<std::endl;
-	char* data;
-	data = this->frame.data.data;
-	std::cout<<data<<std::endl;
+	//store data in map
+
+	std::cout<<this->frame.data.dataptr<<std::endl;
 std::cout<<"end storing"<<std::endl;
 }
 void receiver::transmission(gpio receiv)
 {
+	//loop for receiving packet's
+//while(this->currentPacket != this->totalPackets)
+//{
 
+//}
 	char *ptr = nullptr;
 	ptr = receiv.readData(100);
 	bool store = true;
@@ -69,6 +73,11 @@ void receiver::transmission(gpio receiv)
 	{
 	this->setAllToFrame(ptr);
 	//here check CRC
+	//add packet to map
+	this->addTotalAmount();
+	this->updateCurrentPacket();
+	this->addPacketToMap();
+
 	this->createFile();
 	//copy only length of data
 	this->file << this->frame.data.data;
@@ -83,6 +92,65 @@ void receiver::transmission(gpio receiv)
 	std::cout<<"from receiver"<<int(ptr)<<std::endl;
 
 
+}
+
+void receiver::sendAnswer(uint8_t status, uint8_t message)
+{
+transmitter answer;
+dataFrame * frameptr;
+gpio localgpio;
+frameptr = this->frame;
+answer.initFrame(this->frame.head.source, this->frame.head.destination, nullptr,frameptr);
+answer.setDataLen(frameptr,1);
+this->frame.head.messageType[0] = status;
+this->frame.data.data[0] = message;
+answer.sendPacket(frameptr,localgpio);
+}
+
+void receiver::updateCurrentPacket()
+{
+	this->currentPacket = converCharToLong(4,this->frame.dataId);
+}
+
+void receiver::addTotalAmount()
+{
+this->totalPackets = converCharToLong(4,this->frame.head.totalpacks);
+}
+
+void receiver::addPacketToMap()
+{
+	long dataId = this->converCharToLong(4,this->frame.dataId);
+	auto iterator = dataStorage.find(dataId);
+	if (iterator == dataStorage.end())
+	{
+	this->dataStorage[dataId] = this->frame.data.dataptr;
+	}
+	else
+	{
+		std::cerr<<"data id is already in storage"<<std::endl;
+	}
+	//if data end of transmission is set
+	//check all packets are arrived;
+
+}
+void receiver::testPacketsInMap()
+{
+
+	auto iterator = this->dataStorage.begin();
+	long testNum =0;
+	while (iterator != this->dataStorage.end())
+	{
+		if (iterator->first != testNum)
+		{
+			std::cerr<<"missing packet"<<iterator->second<<std::endl;
+		}
+		testNum++;
+		iterator++;
+	}
+	if (testNum-1 != this->totalPackets)
+	{
+		std::cerr<<"packets count doesn't match!!"<<std::endl;
+	}
 }
 void receiver::createFile()
 {

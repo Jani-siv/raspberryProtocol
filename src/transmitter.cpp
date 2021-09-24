@@ -228,8 +228,10 @@ this->position++;
 
 void transmitter::initFrame(char* source, char* destination, char* filename, dataFrame* frame)
 {
-
+	if (filename != nullptr)
+	{
 	this->initTransmission(filename);
+	}
 	//add packed id
 	this->addDataId(frame,this->position);
 	//data lenght
