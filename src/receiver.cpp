@@ -64,7 +64,7 @@ while(this->currentPacket != this->totalPackets)
 	std::cout<<"address of this device:"<<temp<<std::endl;
 
 	char *ptr = nullptr;
-	ptr = this->datalines->readData(100);
+	ptr = this->datalines->readData(100,this->timeouttime);
 	this->datalines->busSpeed.inputspeed = 0;
 	//timeout
 	if (ptr == nullptr)
@@ -97,13 +97,15 @@ while(this->currentPacket != this->totalPackets)
 	{
 		std::cout<<"data type was correct 0xff starting save data"<<std::endl;
 		//this section only for saving data
-	this->addTotalAmount();
+	long tot = this->addTotalAmount();
+	std::cout<<"total packs: "<<tot<<std::endl;
 	this->updateCurrentPacket();
 	this->addPacketToMap();
 	this->createFile();
 	//copy only length of data
 	this->file << this->frame.data.data;
 	this->file.close();
+	this->currentPacket++;
 	//answer to sender
 	//all OK
 
@@ -157,11 +159,13 @@ std::cout<<"done"<<std::endl;
 void receiver::updateCurrentPacket()
 {
 	this->currentPacket = converCharToLong(4,this->frame.dataId);
+	std::cout<<"current packet in function: "<<converCharToLong(4,this->frame.dataId)<<std::endl;
 }
 
-void receiver::addTotalAmount()
+long receiver::addTotalAmount()
 {
 this->totalPackets = converCharToLong(4,this->frame.head.totalpacks);
+return converCharToLong(4,this->frame.head.totalpacks);
 }
 
 void receiver::addPacketToMap()

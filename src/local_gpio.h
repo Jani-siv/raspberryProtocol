@@ -24,7 +24,7 @@
 #include <string.h>
 #include <chrono>
 #include "frame.h"
-#define TIMEOUT 5.0
+
 
 class gpio {
 public:
@@ -42,8 +42,8 @@ __u32 rx;
 __u32 tx;
 }devcfg;
 void writeData(uint8_t data);
-char* readData(int bytes);
-void getTiming();
+char* readData(int bytes, int timeout);
+void getTiming(int timeout);
 devcfg dev;
 timing busSpeed;
 private:

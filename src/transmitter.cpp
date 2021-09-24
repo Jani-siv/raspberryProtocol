@@ -152,6 +152,7 @@ if (type == 0)
 	char *addr;
 	addr = this->address;
 receiver res(addr,nullptr,this->dataline);
+res.timeouttime= 2;
 int next = 0;
 std::cout<<"start waiting answer"<<std::endl;
 
