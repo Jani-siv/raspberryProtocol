@@ -57,7 +57,7 @@ std::cout<<"end storing"<<std::endl;
 int receiver::transmission()
 {
 	//loop for receiving packet's
-while(this->currentPacket != this->totalPackets)
+while(this->currentPacket < this->totalPackets)
 {
 	char *temp;
 	temp = this->address;
