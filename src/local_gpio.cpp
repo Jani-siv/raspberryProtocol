@@ -47,15 +47,19 @@ char* gpio::readData(int bytes)
 	 * because this is for protocol we can reserve memory before reading;
 	 */
 	char * ptr = nullptr;
-	std::cout<<"before memory set"<<std::endl;
 	ptr = (char*)malloc(bytes*sizeof(char));
-	std::cout<<"memory ready to read"<<std::endl;
 	if (this->busSpeed.inputspeed == 0)
 	{
 this->getTiming();
-bytes--; //used first 8 bits to calculate and return halfway of bit back
 	}
-	int j= 0;
+if (this->timeout == true)
+{
+	//this wont stop program timeout
+	std::cout<<"timeout in local_gpio.cpp"<<std::endl;
+	return nullptr;
+}
+bytes--; //used first 8 bits to calculate and return halfway of bit back
+int j= 0;
 	while (bytes > 0)
 	{
 		uint8_t datablock = 0x00;
@@ -83,8 +87,16 @@ bytes--; //used first 8 bits to calculate and return halfway of bit back
 			}
 			usleep(this->busSpeed.inputspeed);
 		}
-		std::cout<<" data: "<<datablock<<std::endl;
 		ptr[j] = datablock;
+		if (ptr[0] != -1)
+		{
+			std::cout<<"ptr stop:"<<int(ptr[0])<<std::endl;
+			char error = 0x00;
+			char *ptrerror;
+			ptrerror = &error;
+			return ptrerror;
+		}
+		std::cout<<" "<<ptr[j]<<std::endl;
 	//	std::cout<<"data block: "<<j<<" is stored in memory"<<std::endl;
 		j++;
 		bytes--;
@@ -95,13 +107,17 @@ return ptr;
 
 void gpio::getTiming()
 {
-	std::chrono::duration<double> diff;
+	std::chrono::duration<double> diff, timeout;
+
+
 	auto end = std::chrono::high_resolution_clock::now();
+	auto timeoutEnd = std::chrono::high_resolution_clock::now();
 	bool startTiming = false;
+
 	while (startTiming == false)
 	{
 		ioctl(this->input.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &this->inputdata);
-		std::cout<<int(inputdata.values[0])<<std::endl;
+		//std::cout<<int(inputdata.values[0])<<std::endl;
 		if (inputdata.values[0] > 0)
 		{
 			auto start =std::chrono::high_resolution_clock::now();
@@ -121,11 +137,20 @@ void gpio::getTiming()
 			std::cout<<"reading speed is: "<<this->busSpeed.inputspeed<<std::endl;
 			std::cout<<"reading speed is: "<<diff.count()<<std::endl;
 			//skip rest of timing
-			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.3));
+			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.4));
 			this->busSpeed.inputspeed -= this->busSpeed.inputspeed %5000; //350 ;)
 			break;
 		}
-
+		timeoutEnd = std::chrono::high_resolution_clock::now();
+		timeout = timeoutEnd - end;
+		double temp = timeout.count();
+		//std::cout<<"temp: "<<temp<<std::endl;
+		if (temp > 3.0)
+		{
+			this->timeout = true;
+			startTiming = true;
+		}
+	//	std::cout<<"timeout count"<<timeout.count()<<std::endl;
 	}
 }
 int gpio::createDatalines()
@@ -175,13 +200,16 @@ int gpio::createDatalines()
 			return -1;
 		}
 
-	if (close(fd) == -1)
+
+	return 0;
+}
+/*
+ * if (close(fd) == -1)
 	{
 		perror("Failed to close GPIO character device file");
 		return -1;
 	}
-	return 0;
-}
+	*/
 
 
 

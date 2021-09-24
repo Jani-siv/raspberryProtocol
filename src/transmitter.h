@@ -12,9 +12,11 @@
 #include <cstring>
 #include <stdio.h>
 #include <fstream>
+#include <chrono>
 #include "frame.h"
 #include "bitoperation.h"
 #include "local_gpio.h"
+#include "receiver.h"
 #define BLOCKSIZE 50
 class transmitter : public bitoperation{
 private:
@@ -24,7 +26,7 @@ private:
 	void setPTP(char* dest, char* sour,dataFrame *frame);
 	void setSYN(dataFrame *frame);
 	void setStartBits(dataFrame *frame);
-	void setDataLen(dataFrame * frame, int len);
+
 	void endOfData(dataFrame* frame);
 	void nextData(dataFrame* frame);
 
@@ -33,6 +35,7 @@ private:
 	void dataType(dataFrame* frame,unsigned char* dataType);
 	int position=1;
 	int size=0;
+	char address[15] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	long amountOfPackets=0;
 	long lastPacketSize=0;
 	bool lastNotFullPack = false;
@@ -40,13 +43,16 @@ private:
 	void getPacketCount();
 	long getFileSize();
 	void calculateAmountOfPackets();
-	void createChunkAndSend(dataFrame* frame, gpio transfer);
+	void createChunkAndSend(dataFrame* frame, gpio *transfer);
+	gpio * dataline;
 	std::ifstream file;
 public:
-
+	transmitter(gpio* dataline);
+	virtual ~transmitter(){};
+	void setDataLen(dataFrame * frame, int len);
 	char* reserveMem(int len);
 	void initFrame(char* source, char* destination, char* filename, dataFrame* frame);
-	void sendPacket(dataFrame* frame, gpio transfer);
+	void sendPacket(dataFrame* frame, gpio *transfer, int type);
 	void initTransmission(char* filename);
 	void printFrame(dataFrame *f);
 	dataFrame frame;

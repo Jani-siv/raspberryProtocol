@@ -7,7 +7,10 @@
 
 #include "transmitter.h"
 
-
+transmitter::transmitter(gpio* dataline)
+{
+	this->dataline = dataline;
+}
 void transmitter::initTransmission(char* filename)
 {
 	//open file in binarymode
@@ -132,48 +135,81 @@ void transmitter::addDataId(dataFrame* frame,int i)
 
 //overflow possibility
 
-void transmitter::sendPacket(dataFrame* frame, gpio transfer)
+void transmitter::sendPacket(dataFrame* frame, gpio *transfer, int type)
 {
+	if (type == 0)
+	{
 this->nextData(frame);
+	}
 this->createChunkAndSend(frame,transfer);
+
+if (type == 0)
+{
+	std::chrono::duration<double> diff;
+	auto start = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
+	//wait answer
+	char *addr;
+	addr = this->address;
+receiver res(addr,nullptr,this->dataline);
+int next = 0;
+std::cout<<"start waiting answer"<<std::endl;
+while (next != 1)
+{
+	std::cout<<"waiting answer"<<std::endl;
+	next = res.transmission();
+if (next == -1)
+{
+	std::cout<<"sending packet again"<<std::endl;
+	createChunkAndSend(frame,transfer);
+}
+if (next == 0)
+{
+	std::cerr<<"error skipping vality check"<<std::endl;
 }
 
-void transmitter::createChunkAndSend(dataFrame* frame, gpio transfer)
+}
+std::cout<<"exiting from sendPacket"<<std::endl;
+this->position++;
+}
+}
+void transmitter::createChunkAndSend(dataFrame* frame, gpio *transfer)
 {
 	//syn
 //std::cout<<"syn"<<std::endl;
-transfer.writeData(frame->head.asyn[0]);
+transfer->writeData(frame->head.asyn[0]);
+
 //std::cout<<"data start"<<std::endl;
-transfer.writeData(frame->head.dataStart[0]);
+transfer->writeData(frame->head.dataStart[0]);
 //std::cout<<"data id"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
-transfer.writeData(frame->dataId[i]);
+transfer->writeData(frame->dataId[i]);
 	}
 //std::cout<<"source"<<frame->head.source<<std::endl;
 for (int i = 0; i < 15; i++)
 	{
-transfer.writeData(frame->head.source[i]);
+transfer->writeData(frame->head.source[i]);
 	}
 //std::cout<<"destination"<<frame->head.destination<<std::endl;
 for (int i = 0; i < 15; i++)
 	{
-transfer.writeData(frame->head.destination[i]);
+transfer->writeData(frame->head.destination[i]);
 	}
 //std::cout<<"message type"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
-transfer.writeData(frame->head.messageType[i]);
+transfer->writeData(frame->head.messageType[i]);
 	}
 //std::cout<<"total packs"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
-transfer.writeData(frame->head.totalpacks[i]);
+transfer->writeData(frame->head.totalpacks[i]);
 	}
 //std::cout<<"datalen"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
-transfer.writeData(frame->head.datalen[i]);
+transfer->writeData(frame->head.datalen[i]);
 	}
 long amountBytes = 0;
 if (this->position < this->amountOfPackets)
@@ -186,10 +222,10 @@ else {
 //std::cout<<"data: "<<frame->data.dataptr<<std::endl;
 for (int i = 0; i < amountBytes; i++)
 	{
-transfer.writeData(frame->data.dataptr[i]);
+transfer->writeData(frame->data.dataptr[i]);
 	}
 //std::cout<<"end byte"<<std::endl;
-transfer.writeData(frame->head.endOfTransmission[0]);
+transfer->writeData(frame->head.endOfTransmission[0]);
 
 }
 

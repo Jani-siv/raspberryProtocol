@@ -43,11 +43,14 @@ __u32 tx;
 void writeData(uint8_t data);
 char* readData(int bytes);
 void getTiming();
-private:
-timing busSpeed;
 devcfg dev;
+timing busSpeed;
+private:
+
+
 struct gpiohandle_data outputdata, inputdata;
 struct gpiohandle_request input, output;
+bool timeout = false;
 };
 
 #endif /* LOCAL_GPIO_H_ */

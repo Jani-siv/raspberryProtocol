@@ -49,8 +49,10 @@ int main(int argc, char *argv[])
 	char* devptr = device;
 	//init devece
 	gpio create(devptr, RX,TX);
+	gpio * resCreate;
+	resCreate = &create;
 	//init frame
-	transmitter* sender = new transmitter ;
+	transmitter* sender = new transmitter(resCreate);
 	dataFrame* local = new dataFrame;
 
 	switch(answer)
@@ -74,18 +76,19 @@ int main(int argc, char *argv[])
 			break;
 	}
 
+
 	create.createDatalines();
 	//transmitter part
-	receiver *res = new receiver(souptr, fileptr);
+	receiver *res = new receiver(souptr, fileptr, resCreate);
 	if(answer == 0)
 	{
-	sender->sendPacket(local, create);
+	sender->sendPacket(local, resCreate,0);
 	}
 	//receiver part
 	else
 	{
 		std::cout<<"ready to read"<<std::endl;
-		res->transmission(create);
+		res->transmission();
 		std::cout<<"ready to take packets"<<std::endl;
 	}
 

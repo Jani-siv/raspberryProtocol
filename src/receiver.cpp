@@ -7,13 +7,15 @@
 
 #include "receiver.h"
 
-receiver::receiver(char* address, char* filename)
+receiver::receiver(char* address, char* filename, gpio* datalines)
 {
+	this->datalines = datalines;
 	for (int i=0; i < 15; i++)
 	{
 this->address[i] = address[i];
 	}
 	this->fileptr = filename;
+	this->datalines->writeData(0x00);
 }
 void receiver::setAllToFrame(char* ptr)
 {
@@ -52,59 +54,104 @@ void receiver::setAllToFrame(char* ptr)
 	std::cout<<this->frame.data.dataptr<<std::endl;
 std::cout<<"end storing"<<std::endl;
 }
-void receiver::transmission(gpio receiv)
+int receiver::transmission()
 {
 	//loop for receiving packet's
-//while(this->currentPacket != this->totalPackets)
-//{
+while(this->currentPacket != this->totalPackets)
+{
+	char *temp;
+	temp = this->address;
+	std::cout<<"address of this device:"<<temp<<std::endl;
 
-//}
 	char *ptr = nullptr;
-	ptr = receiv.readData(100);
-	bool store = true;
+	ptr = this->datalines->readData(100);
+	this->datalines->busSpeed.inputspeed = 0;
+	//timeout
+	if (ptr == nullptr)
+	{
+	return -1;
+	}
+	//datastart bit found
+	if (ptr[0]== -1)
+	{
+		std::cout<<"startbit founded"<<std::endl;
+	bool correctAddress = true;
+
 	for (int i= 0; i < 15; i++)
 	{
 		if (ptr[DESTINATION+i] != this->address[i])
 		{
-			store = false;
+			correctAddress = false;
 		}
 	}
-	if (store == true)
+	if (correctAddress == true)
 	{
 	this->setAllToFrame(ptr);
 	//here check CRC
 	//add packet to map
+	//check message type if data 0xff store to file
+	//if 0x00 read first byte of data section
+	uint8_t datatype = ptr[MESSAGETYPE];
+	std::cout<<"data type: "<<int(datatype)<<std::endl;
+	if (datatype == 0xFF)
+	{
+		std::cout<<"data type was correct 0xff starting save data"<<std::endl;
+		//this section only for saving data
 	this->addTotalAmount();
 	this->updateCurrentPacket();
 	this->addPacketToMap();
-
 	this->createFile();
 	//copy only length of data
 	this->file << this->frame.data.data;
 	this->file.close();
+	//answer to sender
+	//all OK
+
+	this->sendAnswer(0x00,0x00);
+	}
+	if (datatype == 0x00)
+	{
+		uint8_t message = ptr[DATA];
+		if ( message == 0x00)
+		{
+			std::cout<<"sending next packet"<<std::endl;
+			return 1;
+		}
+		else
+		{
+			std::cout<<"resending current packet"<<std::endl;
+			return -1;
+		}
+	}
 	}
 	//check data crc and respond to sender
-	if (store == false)
+	if (correctAddress == false)
 	{
 		std::cout<<"wrong destination address! discarding packets"<<std::endl;
 	}
+	}
+}
 	std::cout<<"data ready"<<std::endl;
-	std::cout<<"from receiver"<<int(ptr)<<std::endl;
-
+return 0;
 
 }
 
 void receiver::sendAnswer(uint8_t status, uint8_t message)
 {
-transmitter answer;
+	std::cout<<"sending answer"<<std::endl;
+	usleep(500000);
+transmitter answer(this->datalines);
 dataFrame * frameptr;
-gpio localgpio;
-frameptr = this->frame;
+this->frame.head.source = this->address;
+frameptr = &this->frame;
+std::cout<<"init frame"<<std::endl;
 answer.initFrame(this->frame.head.source, this->frame.head.destination, nullptr,frameptr);
 answer.setDataLen(frameptr,1);
 this->frame.head.messageType[0] = status;
 this->frame.data.data[0] = message;
-answer.sendPacket(frameptr,localgpio);
+std::cout<<"start sending frame"<<std::endl;
+answer.sendPacket(frameptr,this->datalines,1);
+std::cout<<"done"<<std::endl;
 }
 
 void receiver::updateCurrentPacket()
