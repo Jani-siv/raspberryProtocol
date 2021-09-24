@@ -26,44 +26,104 @@ void gpio::writeData(uint8_t data)
 		if (temp > 0)
 		{
 		this->outputdata.values[0] =255;
-	//	std::cout<<"1";//<<int(outputdata.values[0]);
+		std::cout<<"1";//<<int(outputdata.values[0]);
 		}
 		else
 		{
 			this->outputdata.values[0] = 0;
-		//	std::cout<<"0";//<<int(outputdata.values[0]);
+			std::cout<<"0";//<<int(outputdata.values[0]);
 		}
 		ret = ioctl(this->output.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &this->outputdata);
 		data = data << 1;
 		/*TODO create real sleep function to set speed*/
 		usleep(5000);
 	}
-//std::cout<<std::endl;
+std::cout<<std::endl;
 }
-void gpio::readData()
+char* gpio::readData(int bytes)
 {
 	/*timing
 	 * read 8 bit and store those in memory
 	 * because this is for protocol we can reserve memory before reading;
 	 */
-this->getTiming(); 		//used first 8 bits to calculate and return halfway of bit back
+	char * ptr = nullptr;
+	ptr = (char*)malloc(bytes*sizeof(char));
+	if (this->busSpeed.inputspeed == 0)
+	{
+this->getTiming();
+	}
+if (this->timeout == true)
+{
+	//this wont stop program timeout
+	std::cout<<"timeout in local_gpio.cpp"<<std::endl;
+	return nullptr;
+}
+bytes--; //used first 8 bits to calculate and return halfway of bit back
+int j= 0;
+	while (bytes > 0)
+	{
+		uint8_t datablock = 0x00;
+		for (int i = 0; i < 8; i++)
+		{
+			ioctl(this->input.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &this->inputdata);
+			if (inputdata.values[0] > 0)
+			{
+				datablock = datablock + 0x01;
+				if (i < 7)
+					{
+						datablock = datablock << 1;
+
+					}
+				std::cout<<"1";
+			}
+			else
+			{
+				std::cout<<"0";
+				if (i < 7)
+					{
+
+						datablock = datablock << 1;
+					}
+			}
+			usleep(this->busSpeed.inputspeed);
+		}
+		ptr[j] = datablock;
+		if (ptr[0] != -1)
+		{
+			std::cout<<"ptr stop:"<<int(ptr[0])<<std::endl;
+			char error = 0x00;
+			char *ptrerror;
+			ptrerror = &error;
+			return ptrerror;
+		}
+		std::cout<<" "<<ptr[j]<<std::endl;
+	//	std::cout<<"data block: "<<j<<" is stored in memory"<<std::endl;
+		j++;
+		bytes--;
+	}
+
+return ptr;
 }
 
 void gpio::getTiming()
 {
-	std::chrono::duration<double> diff;
+	std::chrono::duration<double> diff, timeout;
+
+
 	auto end = std::chrono::high_resolution_clock::now();
+	auto timeoutEnd = std::chrono::high_resolution_clock::now();
 	bool startTiming = false;
+
 	while (startTiming == false)
 	{
 		ioctl(this->input.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &this->inputdata);
-		std::cout<<int(inputdata.values[0])<<std::endl;
+		//std::cout<<int(inputdata.values[0])<<std::endl;
 		if (inputdata.values[0] > 0)
 		{
 			auto start =std::chrono::high_resolution_clock::now();
 		while (inputdata.values[0] > 0)
 		{
-			std::cout<<int(inputdata.values[0])<<std::endl;
+		//	std::cout<<int(inputdata.values[0])<<std::endl;
 			ioctl(this->input.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &this->inputdata);
 			end = std::chrono::high_resolution_clock::now();
 		}
@@ -77,10 +137,22 @@ void gpio::getTiming()
 			std::cout<<"reading speed is: "<<this->busSpeed.inputspeed<<std::endl;
 			std::cout<<"reading speed is: "<<diff.count()<<std::endl;
 			//skip rest of timing
-			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed/2));
+			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.4));
+			this->busSpeed.inputspeed -= this->busSpeed.inputspeed %5000; //350 ;)
 			break;
 		}
-
+		if (startTiming == false)
+		{
+		timeoutEnd = std::chrono::high_resolution_clock::now();
+		timeout = timeoutEnd - end;
+		double temp = timeout.count();
+		//std::cout<<"temp: "<<temp<<std::endl;
+		if (temp > TIMEOUT)
+		{
+			this->timeout = true;
+			startTiming = true;
+		}}
+	//	std::cout<<"timeout count"<<timeout.count()<<std::endl;
 	}
 }
 int gpio::createDatalines()
@@ -130,13 +202,16 @@ int gpio::createDatalines()
 			return -1;
 		}
 
-	if (close(fd) == -1)
+
+	return 0;
+}
+/*
+ * if (close(fd) == -1)
 	{
 		perror("Failed to close GPIO character device file");
 		return -1;
 	}
-	return 0;
-}
+	*/
 
 
 

@@ -8,9 +8,9 @@
 
 #include <iostream>
 
-#include "local_gpio.h"
 #include "transmitter.h"
 #include "frame.h"
+#include "receiver.h"
 using namespace std;
 #define RX 17
 #define TX 27
@@ -31,37 +31,76 @@ using namespace std;
 // `--specs=nosys.specs`.
 //TODO add gpio to transmitter and how send whole packet
 
-int
-main()
+int main(int argc, char *argv[])
 {
+	if (argc > 1)
+	{
+	int answer = atoi(argv[1]);
+	std::cout<<"selected: "<<answer<<std::endl;
+
+	char dev1[] = "111.111.111.111";
+	char dev2[] = "222.222.222.222";
 	char device[] = "/dev/gpiochip0";
 	char file[] = "test.txt";
-	char destination[] = "222.222.222.222";
-	char source[] = "111.111.111.111";
-	char * desptr;
-	char* souptr;
+	char * desptr =nullptr;
+	char* souptr = nullptr;
 	char *fileptr;
-	desptr = destination;
-	souptr = source;
 	fileptr = file;
 	char* devptr = device;
 	//init devece
 	gpio create(devptr, RX,TX);
+	gpio * resCreate;
+	resCreate = &create;
 	//init frame
-	transmitter* sender = new transmitter ;
+	transmitter* sender = new transmitter(resCreate);
 	dataFrame* local = new dataFrame;
 
-	//frame->data.dataptr = sender.reserveMem(BLOCKSIZE);
-	sender->initFrame(souptr,desptr,fileptr,local);
+	switch(answer)
+	{
+		case 0:
+			std::cout<<"selected transmitter"<<std::endl;
+			desptr = dev1;
+			souptr = dev2;
+			sender->initFrame(souptr,desptr,fileptr,local);
+			break;
+
+		case 1:
+			std::cout<<"selected receiver"<<std::endl;
+			souptr = dev1;
+			desptr = dev2;
+			break;
+
+		default:
+			desptr = dev1;
+			souptr = dev2;
+			break;
+	}
+
+
 	create.createDatalines();
-	sender->sendPacket(local, create);
-	//sender.printFrame(frame);
+	//transmitter part
+	receiver *res = new receiver(souptr, fileptr, resCreate);
+	if(answer == 0)
+	{
+	sender->sendPacket(local, resCreate,0);
+	}
+	//receiver part
+	else
+	{
+		std::cout<<"ready to read"<<std::endl;
+		res->transmission();
+		std::cout<<"ready to take packets"<<std::endl;
+	}
+
 	delete(sender);
 	delete(local);
-/*	create.createDatalines();
-	create.writeData(0xAA);
-	create.readData();
- */ std::cout << "Happy end!!!" << endl;
+
+	std::cout << "Happy end!!!" << endl;
+	}
+	else
+	{
+		std::cout<<"to use set 0 transmitter and 1 receiver in commandline"<<std::endl;
+	}
 
   return 0;
 }

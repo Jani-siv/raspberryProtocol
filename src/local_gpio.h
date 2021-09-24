@@ -23,6 +23,8 @@
 #include <iostream>
 #include <string.h>
 #include <chrono>
+#include "frame.h"
+#define TIMEOUT 5.0
 
 class gpio {
 public:
@@ -30,8 +32,8 @@ int createDatalines();
 gpio(char* dev, __u32 rx, __u32 tx);
 typedef struct timing
 {
-	long inputspeed;
-	double outputspeed;
+	long inputspeed = 0;
+	double outputspeed= 0;
 }timing;
 typedef struct devcfg
 {
@@ -40,13 +42,16 @@ __u32 rx;
 __u32 tx;
 }devcfg;
 void writeData(uint8_t data);
-void readData();
+char* readData(int bytes);
 void getTiming();
-private:
-timing busSpeed;
 devcfg dev;
+timing busSpeed;
+private:
+
+
 struct gpiohandle_data outputdata, inputdata;
 struct gpiohandle_request input, output;
+bool timeout = false;
 };
 
 #endif /* LOCAL_GPIO_H_ */
