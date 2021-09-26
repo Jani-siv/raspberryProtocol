@@ -17,6 +17,8 @@
 #include "bitoperation.h"
 #include "local_gpio.h"
 #include "receiver.h"
+#include "crc.h"
+#include <map>
 #define BLOCKSIZE 50
 class transmitter : public bitoperation{
 private:
@@ -29,9 +31,9 @@ private:
 
 	void endOfData(dataFrame* frame);
 	void nextData(dataFrame* frame);
-
+	void createCRC(dataFrame * frame);
 	void addDataId(dataFrame* frame,int i);
-
+	std::map<int,int> datalen;
 	void dataType(dataFrame* frame,unsigned char* dataType);
 	int position=1;
 	int size=0;
@@ -49,7 +51,7 @@ private:
 public:
 	transmitter(gpio* dataline);
 	virtual ~transmitter(){};
-	void setDataLen(dataFrame * frame, int len);
+	void setDataLen(dataFrame * frame, long len);
 	char* reserveMem(int len);
 	void initFrame(char* source, char* destination, char* filename, dataFrame* frame);
 	void sendPacket(dataFrame* frame, gpio *transfer, int type);

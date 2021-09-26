@@ -15,7 +15,6 @@
 #define TOTALPACKS 39
 #define DATALEN 43
 #define DATA 47
-#define ENDTRANS 97
 #include "frame.h"
 #include <iostream>
 #include <string>
@@ -28,6 +27,7 @@
 #include "frame.h"
 #include "bitoperation.h"
 #include "transmitter.h"
+#include "crc.h"
 
 
 class receiver : public bitoperation {
@@ -40,7 +40,7 @@ private:
 	long totalPackets =0;
 	long currentPacket = -1;
 	std::map<int,char*> dataStorage;
-	void setAllToFrame(char* ptr);
+	int setAllToFrame(char* ptr);
 	void storeDataToFile();
 	char* fileptr = nullptr;
 	std::ofstream file;

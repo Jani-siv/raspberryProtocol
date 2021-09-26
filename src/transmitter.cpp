@@ -25,6 +25,18 @@ std::cout<<"size:"<<this->size<<std::endl;
 this->calculateAmountOfPackets();
 std::cout<<"amounts of full packets: "<<this->amountOfPackets<<std::endl;
 std::cout<<"last packet size: "<<this->lastPacketSize<<std::endl;
+//set packets id and size in map
+for (long i=0; i <= this->amountOfPackets; i++)
+{
+	if (i == this->amountOfPackets)
+	{
+		this->datalen[i] = this->lastPacketSize;
+	}
+	else
+	{
+		this->datalen[i] = this->size;
+	}
+}
 }
 
 void transmitter::calculateAmountOfPackets()
@@ -99,24 +111,31 @@ void transmitter::setStartBits(dataFrame *frame)
 	frame->head.endOfTransmission[0]=0x00;
 }
 
-void transmitter::setDataLen(dataFrame * frame, int len)
+void transmitter::setDataLen(dataFrame * frame, long len)
 {
-if (len < 999)
+char * lenptr = nullptr;
+lenptr = frame->head.datalen;
+convertLongToChar(len,lenptr,4);
+}
+
+void transmitter::createCRC(dataFrame * frame)
 {
-		frame->head.datalen[0] = char(len%10);
-		len -= frame->head.datalen[0];
-		len /=10;
-
-		frame->head.datalen[1] = char(len%10);
-		len -= frame->head.datalen[1];
-		len /=10;
-
-		frame->head.datalen[2] = char(len%10);
+char *ptr = nullptr;
+long currentSize;
+auto it = this->datalen.find(this->position-1);
+if (it == this->datalen.end())
+{
+	currentSize = this->lastPacketSize;
 }
 else
 {
-	std::cout<<"too long length"<<std::endl;
+currentSize = it->second;
 }
+std::cout<<"current size in create CRC: "<<currentSize<<std::endl;
+	ptr =makeCrc(frame->data.dataptr,currentSize);
+	frame->CRC[0] = ptr[0];
+	frame->CRC[1] = ptr[1];
+	ptr = nullptr;
 }
 
 void transmitter::endOfData(dataFrame* frame)
@@ -180,6 +199,7 @@ this->position++;
 }
 void transmitter::createChunkAndSend(dataFrame* frame, gpio *transfer)
 {
+	createCRC(frame);
 	//syn
 //std::cout<<"syn"<<std::endl;
 transfer->writeData(frame->head.asyn[0]);
@@ -229,6 +249,13 @@ for (int i = 0; i < amountBytes; i++)
 	{
 transfer->writeData(frame->data.dataptr[i]);
 	}
+//add CRC
+std::cout<<"CRC"<<std::endl;
+for (int i= 0; i < 2; i++)
+{
+	transfer->writeData(frame->CRC[i]);
+}
+
 //std::cout<<"end byte"<<std::endl;
 transfer->writeData(frame->head.endOfTransmission[0]);
 
@@ -280,7 +307,18 @@ void transmitter::initFrame(char* source, char* destination, char* filename, dat
 	//add packed id
 	this->addDataId(frame,this->position);
 	//data lenght
-	this->setDataLen(frame, BLOCKSIZE);
+	long currentSize;
+	auto it = this->datalen.find(this->position-1);
+	if (it != this->datalen.end())
+	{
+	currentSize = it->second;
+	}
+	else
+	{
+		currentSize = BLOCKSIZE;
+	}
+	std::cout<<"transmitter currentSize"<<currentSize<<std::endl;
+	this->setDataLen(frame, currentSize);
 	//asyn
 	this->setSYN(frame);
 	//start and end bit to continue

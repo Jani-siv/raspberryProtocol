@@ -30,13 +30,29 @@ using namespace std;
 // If functionality is not required, to only pass the build, use
 // `--specs=nosys.specs`.
 //TODO add gpio to transmitter and how send whole packet
-
+#include "crc.h"
 int main(int argc, char *argv[])
 {
 	if (argc > 1)
 	{
 	int answer = atoi(argv[1]);
 	std::cout<<"selected: "<<answer<<std::endl;
+
+/*	std::cout<<"testing crc:"<<std::endl;
+	char test[3];
+	test[0] =0xFF;
+	test[1] =0x20;
+	test[2] =0x20;
+	std::cout<<"data: "<<int(test[0])<<int(test[1])<<int(test[2])<<std::endl;
+	char *dataptr;
+
+dataptr = test;
+char *crc = makeCrc(dataptr,3);
+std::cout<<"first part of crc:"<<int(crc[0])<<" second: "<<int(crc[1])<<std::endl;
+int crcCarry = checkCrc(dataptr,3,crc);
+std::cout<<"crc checksum:"<<crcCarry<<std::endl;
+sleep(10);*/
+
 
 	char dev1[] = "111.111.111.111";
 	char dev2[] = "222.222.222.222";

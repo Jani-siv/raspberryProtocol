@@ -17,7 +17,7 @@ this->address[i] = address[i];
 	this->fileptr = filename;
 	this->datalines->writeData(0x00);
 }
-void receiver::setAllToFrame(char* ptr)
+int receiver::setAllToFrame(char* ptr)
 {
 	//allocate memory for pointers
 
@@ -38,9 +38,18 @@ void receiver::setAllToFrame(char* ptr)
 		this->frame.head.datalen[i] =	ptr[DATALEN+i];
 	}
 
-	this->frame.head.endOfTransmission[0] = ptr[ENDTRANS];
 
-	for (int i =0; i < 50; i++)
+	//get data len
+	char* datalenptr;
+	datalenptr = this->frame.head.datalen;
+	long datalen = converCharToLong(4,datalenptr);
+	this->frame.CRC[0] = ptr[(DATA+datalen)] & 0xFF;
+	this->frame.CRC[1] = ptr[(DATA+datalen+1)] & 0xFF;
+	this->frame.head.endOfTransmission[0] = ptr[(DATA+datalen+2)];
+
+
+std::cout<<"crc 0"<<int(this->frame.CRC[0])<<" crc 1 "<<int(this->frame.CRC[1])<<"end transmiss... : "<<int(this->frame.head.endOfTransmission[0])<<std::endl;
+	for (int i =0; i < datalen; i++)
 	{
 		this->frame.data.data[i] = ptr[DATA+i];
 	}
@@ -49,10 +58,24 @@ void receiver::setAllToFrame(char* ptr)
 	std::cout<<this->frame.head.destination[i];
 	}
 	std::cout<<std::endl;
+	//CRC CHECK
+	char* dataptr = nullptr;
+	dataptr = this->frame.data.data;
+	char *crcptr = nullptr;
+	crcptr = this->frame.CRC;
+	long crcValue = checkCrc(dataptr,datalen,crcptr);
+	if (crcValue == 0)
+	{
+		std::cout<<"data is valid"<<std::endl;
+	}
+	else {
+		std::cout<<"data is corrupted: "<<crcValue<<std::endl;
+		return -1;
+	}
 	//store data in map
 
-	std::cout<<this->frame.data.dataptr<<std::endl;
 std::cout<<"end storing"<<std::endl;
+return 0;
 }
 int receiver::transmission()
 {
@@ -86,12 +109,19 @@ while(this->currentPacket < this->totalPackets)
 	}
 	if (correctAddress == true)
 	{
-	this->setAllToFrame(ptr);
+		uint8_t datatype = ptr[MESSAGETYPE];
+		int dataCRC = this->setAllToFrame(ptr);
+	if (dataCRC < 0)
+	{
+		//don't save message data is corrupted
+		datatype = 0x00;
+		std::cout<<"Data is corrupted"<<std::endl;
+	}
 	//here check CRC
 	//add packet to map
 	//check message type if data 0xff store to file
 	//if 0x00 read first byte of data section
-	uint8_t datatype = ptr[MESSAGETYPE];
+
 	std::cout<<"data type: "<<int(datatype)<<std::endl;
 	if (datatype == 0xFF)
 	{
@@ -145,6 +175,7 @@ void receiver::sendAnswer(uint8_t status, uint8_t message)
 transmitter answer(this->datalines);
 dataFrame * frameptr;
 this->frame.head.source = this->address;
+
 frameptr = &this->frame;
 std::cout<<"init frame"<<std::endl;
 answer.initFrame(this->frame.head.source, this->frame.head.destination, nullptr,frameptr);
