@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 	int answer = atoi(argv[1]);
 	std::cout<<"selected: "<<answer<<std::endl;
 
-	std::cout<<"testing crc:"<<std::endl;
+/*	std::cout<<"testing crc:"<<std::endl;
 	char test[3];
 	test[0] =0xFF;
 	test[1] =0x20;
@@ -51,7 +51,7 @@ char *crc = makeCrc(dataptr,3);
 std::cout<<"first part of crc:"<<int(crc[0])<<" second: "<<int(crc[1])<<std::endl;
 int crcCarry = checkCrc(dataptr,3,crc);
 std::cout<<"crc checksum:"<<crcCarry<<std::endl;
-sleep(10);
+sleep(10);*/
 
 
 	char dev1[] = "111.111.111.111";

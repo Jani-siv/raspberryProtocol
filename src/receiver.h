@@ -15,7 +15,6 @@
 #define TOTALPACKS 39
 #define DATALEN 43
 #define DATA 47
-#define ENDTRANS 97
 #include "frame.h"
 #include <iostream>
 #include <string>

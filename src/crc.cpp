@@ -51,6 +51,7 @@ int checkCrc(char * data, unsigned int size, char* crcCarry)
 	{
 		dataValue += data[i] & 0xFF;
 	}
+
 	//carry
 std::cout<<"crc data size: "<<dataValue<<std::endl;
 
@@ -63,6 +64,7 @@ std::cout<<"crc data size: "<<dataValue<<std::endl;
 	std::cout<<"carry in check"<<carry<<std::endl;
 
 	dataValue += carry;
+	std::cout<<"datavalue + carry in check: "<<dataValue<<std::endl;
 	carry = dataValue%DIVIDER;
 	return carry;
 }
