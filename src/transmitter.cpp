@@ -119,6 +119,11 @@ else
 }
 }
 
+void transmitter::createCRC()
+{
+
+}
+
 void transmitter::endOfData(dataFrame* frame)
 {
 	frame->head.endOfTransmission[0]=0xFF;

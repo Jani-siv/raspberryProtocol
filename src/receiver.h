@@ -28,6 +28,7 @@
 #include "frame.h"
 #include "bitoperation.h"
 #include "transmitter.h"
+#include "crc.h"
 
 
 class receiver : public bitoperation {

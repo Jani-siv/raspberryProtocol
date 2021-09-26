@@ -17,6 +17,7 @@
 #include "bitoperation.h"
 #include "local_gpio.h"
 #include "receiver.h"
+#include "crc.h"
 #define BLOCKSIZE 50
 class transmitter : public bitoperation{
 private:
@@ -29,7 +30,7 @@ private:
 
 	void endOfData(dataFrame* frame);
 	void nextData(dataFrame* frame);
-
+	void createCRC();
 	void addDataId(dataFrame* frame,int i);
 
 	void dataType(dataFrame* frame,unsigned char* dataType);
