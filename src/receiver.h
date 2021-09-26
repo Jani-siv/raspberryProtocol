@@ -40,7 +40,7 @@ private:
 	long totalPackets =0;
 	long currentPacket = -1;
 	std::map<int,char*> dataStorage;
-	void setAllToFrame(char* ptr);
+	int setAllToFrame(char* ptr);
 	void storeDataToFile();
 	char* fileptr = nullptr;
 	std::ofstream file;

@@ -17,7 +17,7 @@ this->address[i] = address[i];
 	this->fileptr = filename;
 	this->datalines->writeData(0x00);
 }
-void receiver::setAllToFrame(char* ptr)
+int receiver::setAllToFrame(char* ptr)
 {
 	//allocate memory for pointers
 
@@ -70,11 +70,12 @@ std::cout<<"crc 0"<<int(this->frame.CRC[0])<<" crc 1 "<<int(this->frame.CRC[1])<
 	}
 	else {
 		std::cout<<"data is corrupted: "<<crcValue<<std::endl;
+		return -1;
 	}
 	//store data in map
 
-	std::cout<<this->frame.data.dataptr<<std::endl;
 std::cout<<"end storing"<<std::endl;
+return 0;
 }
 int receiver::transmission()
 {
@@ -108,12 +109,19 @@ while(this->currentPacket < this->totalPackets)
 	}
 	if (correctAddress == true)
 	{
-	this->setAllToFrame(ptr);
+		uint8_t datatype = ptr[MESSAGETYPE];
+		int dataCRC = this->setAllToFrame(ptr);
+	if (dataCRC < 0)
+	{
+		//don't save message data is corrupted
+		datatype = 0x00;
+		std::cout<<"Data is corrupted"<<std::endl;
+	}
 	//here check CRC
 	//add packet to map
 	//check message type if data 0xff store to file
 	//if 0x00 read first byte of data section
-	uint8_t datatype = ptr[MESSAGETYPE];
+
 	std::cout<<"data type: "<<int(datatype)<<std::endl;
 	if (datatype == 0xFF)
 	{
