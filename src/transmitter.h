@@ -35,7 +35,7 @@ private:
 	void addDataId(dataFrame* frame,int i);
 	std::map<int,int> datalen;
 	void dataType(dataFrame* frame,unsigned char* dataType);
-	int position=1;
+	int position=0;
 	int size=0;
 	char address[15] ={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	long amountOfPackets=0;
@@ -48,6 +48,8 @@ private:
 	void createChunkAndSend(dataFrame* frame, gpio *transfer, int useExternalCrc);
 	gpio * dataline;
 	std::ifstream file;
+	void updateFrame(dataFrame* frame);
+	int  waitAnswer(dataFrame* frame, gpio *transfer, int useExternalCrc);
 public:
 	transmitter(gpio* dataline);
 	virtual ~transmitter(){};

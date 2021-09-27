@@ -17,7 +17,7 @@ char* makeCrc(char * data, unsigned int size)
 	{
 		value += data[i] & 0xFF;
 	}
-	std::cout<<"data size: "<<value<<std::endl;
+	std::cout<<"data CRC value: "<<value<<std::endl;
 	if (value >= DIVIDER)
 	{
 value %=DIVIDER;

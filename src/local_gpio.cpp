@@ -88,6 +88,7 @@ int j= 0;
 			}
 			usleep(this->busSpeed.inputspeed);
 		}
+		//std::cout<<std::endl;
 		ptr[j] = datablock;
 		if (ptr[0] != -1)
 		{

@@ -53,7 +53,9 @@ std::cout<<"crc 0"<<int(this->frame.CRC[0])<<" crc 1 "<<int(this->frame.CRC[1])<
 	for (int i =0; i < datalen; i++)
 	{
 		this->frame.data.data[i] = ptr[DATA+i];
+		std::cout<<ptr[DATA+i];
 	}
+	std::cout<<std::endl;
 	for(int i=0; i < 15; i++)
 	{
 	std::cout<<this->frame.head.destination[i];
@@ -70,7 +72,7 @@ std::cout<<"crc 0"<<int(this->frame.CRC[0])<<" crc 1 "<<int(this->frame.CRC[1])<
 		std::cout<<"data is valid"<<std::endl;
 	}
 	else {
-		std::cout<<"data is corrupted: "<<crcValue<<std::endl;
+		std::cerr<<"data is corrupted: "<<crcValue<<std::endl;
 		return -1;
 	}
 	//store data in map
@@ -112,6 +114,7 @@ while(this->currentPacket < this->totalPackets)
 	{
 		uint8_t datatype = ptr[MESSAGETYPE];
 		int dataCRC = this->setAllToFrame(ptr);
+		std::cout<<"DATA: "<<this->frame.data.dataptr<<std::endl;
 		if (this->waitingAnswer == true)
 		{
 			//break answer waiting loop
@@ -133,8 +136,9 @@ while(this->currentPacket < this->totalPackets)
 	{
 		std::cout<<"data type was correct 0xff starting save data"<<std::endl;
 		//this section only for saving data
-		long tot = this->addTotalAmount();
-		std::cout<<"total packs: "<<tot<<std::endl;
+		long tot =0;
+		this->addTotalAmount();
+		std::cout<<"total packs: "<<this->totalPackets<<std::endl;
 
 		this->updateCurrentPacket();
 		int packet = this->addPacketToMap();
@@ -142,8 +146,11 @@ while(this->currentPacket < this->totalPackets)
 			{
 			this->createFile();
 			//copy only length of data
+
 			this->file << this->frame.data.data;
+
 			this->file.close();
+			memset(this->frame.data.data,'0',sizeof(this->frame.data.data));
 			this->currentPacket++;
 			//answer to sender
 			//all OK
@@ -183,7 +190,7 @@ return 0;
 void receiver::sendAnswer(uint8_t status, uint8_t message)
 {
 	std::cout<<"sending answer"<<std::endl;
-	//usleep(500);
+	usleep(200000);
 transmitter answer(this->datalines);
 dataFrame * frameptr;
 frameptr = &this->frame;

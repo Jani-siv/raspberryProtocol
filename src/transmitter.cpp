@@ -37,6 +37,8 @@ for (long i=0; i <= this->amountOfPackets; i++)
 		this->datalen[i] = this->size;
 	}
 }
+convertLongToChar(this->amountOfPackets,this->frame.head.totalpacks,4);
+
 }
 
 void transmitter::calculateAmountOfPackets()
@@ -130,10 +132,11 @@ if (it == this->datalen.end())
 }
 else
 {
-currentSize = it->second;
+currentSize = BLOCKSIZE;
 }
 std::cout<<"current size in create CRC: "<<currentSize<<std::endl;
 	ptr =makeCrc(frame->data.dataptr,currentSize);
+	std::cout<<frame->data.dataptr<<std::endl;
 	frame->CRC[0] = ptr[0];
 	frame->CRC[1] = ptr[1];
 	ptr = nullptr;
@@ -159,62 +162,73 @@ void transmitter::sendPacket(dataFrame* frame, gpio *transfer, int type, int use
 {
 	if (type == 0)
 	{
+
+		convertLongToChar(this->amountOfPackets,frame->head.totalpacks,4);
+		std::cout<<"total Amount of packets:"<<this->amountOfPackets<<std::endl;
 this->nextData(frame);
 	}
 this->createChunkAndSend(frame,transfer,useExternalCrc);
 //only for transmitter
 if (type == 0)
 {
-	std::chrono::duration<double> diff;
-	auto start = std::chrono::high_resolution_clock::now();
-	auto end = std::chrono::high_resolution_clock::now();
-	//wait answer
+	while (this->position < this->amountOfPackets+1)
+	{
+		while (this->waitAnswer(frame,transfer,type) < 0)
+		{
+			this->createChunkAndSend(frame,transfer,type);
+		}
+		this->nextData(frame);
+		this->createChunkAndSend(frame,transfer,type);
+	}
+	this->waitAnswer(frame,transfer,type);
+}
+}
+
+int transmitter::waitAnswer(dataFrame* frame, gpio *transfer, int useExternalCrc)
+{
 	char *addr;
 	addr = this->address;
-receiver res(addr,nullptr,this->dataline);
-res.timeouttime= 3;
-res.waitingAnswer = true;
-int next = 0;
-std::cout<<"start waiting answer"<<std::endl;
-int breakWaiting = 0;
-while (next != 1)
-{ if (breakWaiting > 5)
-{break;}
-	std::cout<<"waiting answer"<<std::endl;
-	next = res.transmission();
+	receiver res(addr,nullptr,this->dataline);
+	res.timeouttime= 5;
+	res.waitingAnswer = true;
+	int next = 0;
+	std::cout<<"start waiting answer"<<std::endl;
+	int breakWaiting = 0;
+	while (next != 1)
+	{
+		if (breakWaiting > 5) {break;}
+		std::cout<<"waiting answer"<<std::endl;
+		next = res.transmission();
+
+		if (int(res.frame.data.data[0]) == -1)
+		{
+			std::cout<<"answer data: "<<int(res.frame.data.data[0])<<std::endl;
+			std::cout<<"resending packets"<<std::endl;
+			return -1;
+			breakWaiting = 0;
+		}
+		breakWaiting++;
+
+
 	if (next == 1)
 	{
-		std::cout<<"message type from answer: "<<int(res.frame.head.messageType[0])<<std::endl;
-		std::cout<<"answering data from answer: "<<int(res.frame.data.data[0])<<std::endl;
+		return 0;
 	}
-	if (res.frame.head.messageType[0] == 0x00)
-	{
-		std::cout<<"answer data: "<<int(res.frame.data.data[1])<<std::endl;
-		std::cout<<"exit from waiting"<<std::endl;
-		next = 1;
-		break;
 	}
-	breakWaiting++;
-if (next == -1)
+
+	std::cout<<"exiting from sendPacket"<<std::endl;
+
+return 0;
+	}
+
+
+
+
+void transmitter::updateFrame(dataFrame* frame)
 {
-	std::cout<<"sending packet again"<<std::endl;
-	createChunkAndSend(frame,transfer,useExternalCrc);
-	if (res.frame.data.data[0] == 0xFF)
-	{
-		next = -1;
-	}
-}
-if (next == 0)
-{
-	std::cerr<<"error skipping vality check"<<std::endl;
-}
 
 }
-std::cout<<"exiting from sendPacket"<<std::endl;
-this->position++;
 
-}
-}
 void transmitter::createChunkAndSend(dataFrame* frame, gpio *transfer, int useExternalCrc)
 {
 	if (useExternalCrc != 1)
@@ -260,7 +274,7 @@ transfer->writeData(frame->head.datalen[i]);
 long amountBytes = 0;
 if (this->position < this->amountOfPackets)
 {
-	amountBytes = this->size;
+	amountBytes = BLOCKSIZE;
 }
 else {
 	amountBytes = this->lastPacketSize;
@@ -298,27 +312,33 @@ void transmitter::dataType(dataFrame* frame,unsigned char* dataType)
 void transmitter::nextData(dataFrame* frame)
 {
 	char buffer[BLOCKSIZE];
-this->file.read(buffer,BLOCKSIZE*(this->position));
+
 //copy packets in frame
 if (this->position < this->amountOfPackets)
 {
+	this->file.seekg(this->position*BLOCKSIZE);
+	this->file.read(buffer,BLOCKSIZE);
 	for (int i=0; i < BLOCKSIZE; i++)
 	{
 frame->data.dataptr[i] =buffer[i];
 	}
+	convertLongToChar(BLOCKSIZE,frame->head.datalen,4);
 }
 else
 {
+	this->file.seekg(this->position*BLOCKSIZE);
+		this->file.read(buffer,this->lastPacketSize);
 	for (int i=0; i < this->lastPacketSize; i++)
 	{
 frame->data.dataptr[i] =buffer[i];
 	}
+	convertLongToChar(this->lastPacketSize,frame->head.datalen,4);
 
 }
 //set packet id
 this->convertLongToChar(this->position,frame->dataId,4);
 this->position++;
-
+std::cout<<"exiting next data"<<std::endl;
 }
 
 void transmitter::initFrame(char* source, char* destination, char* filename, dataFrame* frame)

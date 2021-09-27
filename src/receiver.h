@@ -59,7 +59,7 @@ public:
 	int calclen(const char* len);
 	void copyDataToMemory(int len, char* data, int packedNum);
 	int calcNum(char* num);
-	int timeouttime =5;
+	int timeouttime =20;
 	dataFrame frame;
 	bool waitingAnswer = false;
 };
