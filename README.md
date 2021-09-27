@@ -4,5 +4,8 @@ catch is to not use spi, uart or another ready protocol to transfer data. Only n
 data need be fully transferred even wires connection lost for while.
 CRC check needed do also in protocol
 
+Now this program send and save under 50 bytes message
+
 todo:
-read data from gpio and save it to long bit stream in memory.
+slice input data in multiple packets
+
