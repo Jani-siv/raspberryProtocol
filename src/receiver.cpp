@@ -43,6 +43,7 @@ int receiver::setAllToFrame(char* ptr)
 	char* datalenptr;
 	datalenptr = this->frame.head.datalen;
 	long datalen = converCharToLong(4,datalenptr);
+	std::cout<<"data len: "<<datalen<<std::endl;
 	this->frame.CRC[0] = ptr[(DATA+datalen)] & 0xFF;
 	this->frame.CRC[1] = ptr[(DATA+datalen+1)] & 0xFF;
 	this->frame.head.endOfTransmission[0] = ptr[(DATA+datalen+2)];
@@ -74,7 +75,6 @@ std::cout<<"crc 0"<<int(this->frame.CRC[0])<<" crc 1 "<<int(this->frame.CRC[1])<
 	}
 	//store data in map
 
-std::cout<<"end storing"<<std::endl;
 return 0;
 }
 int receiver::transmission()
@@ -87,6 +87,7 @@ while(this->currentPacket < this->totalPackets)
 	std::cout<<"address of this device:"<<temp<<std::endl;
 
 	char *ptr = nullptr;
+	this->datalines->busSpeed.inputspeed = 0;
 	ptr = this->datalines->readData(100,this->timeouttime);
 	this->datalines->busSpeed.inputspeed = 0;
 	//timeout
@@ -111,6 +112,11 @@ while(this->currentPacket < this->totalPackets)
 	{
 		uint8_t datatype = ptr[MESSAGETYPE];
 		int dataCRC = this->setAllToFrame(ptr);
+		if (this->waitingAnswer == true)
+		{
+			//break answer waiting loop
+			return 1;
+		}
 	if (dataCRC < 0)
 	{
 		//don't save message data is corrupted
@@ -123,35 +129,36 @@ while(this->currentPacket < this->totalPackets)
 	//if 0x00 read first byte of data section
 
 	std::cout<<"data type: "<<int(datatype)<<std::endl;
-	if (datatype == 0xFF)
+	if (datatype == 0xFF && this->waitingAnswer != true)
 	{
 		std::cout<<"data type was correct 0xff starting save data"<<std::endl;
 		//this section only for saving data
-	long tot = this->addTotalAmount();
-	std::cout<<"total packs: "<<tot<<std::endl;
-	this->updateCurrentPacket();
-	this->addPacketToMap();
-	this->createFile();
-	//copy only length of data
-	this->file << this->frame.data.data;
-	this->file.close();
-	this->currentPacket++;
-	//answer to sender
-	//all OK
+		long tot = this->addTotalAmount();
+		std::cout<<"total packs: "<<tot<<std::endl;
 
-	this->sendAnswer(0x00,0x00);
+		this->updateCurrentPacket();
+		int packet = this->addPacketToMap();
+		if (packet == 0)
+			{
+			this->createFile();
+			//copy only length of data
+			this->file << this->frame.data.data;
+			this->file.close();
+			this->currentPacket++;
+			//answer to sender
+			//all OK
+			}
+		this->sendAnswer(0x00,0xAA);
 	}
+	//CRC ERROR
 	if (datatype == 0)
 	{
-		uint8_t message = ptr[DATA];
-		if ( message == 0)
+		if (this->waitingAnswer == false)
 		{
-			std::cout<<"sending next packet"<<std::endl;
-			return 1;
+			this->sendAnswer(0x00,-1);
 		}
-		else
-		{
-			std::cout<<"resending current packet"<<std::endl;
+		else {
+			//answering mechanism
 			return -1;
 		}
 	}
@@ -160,6 +167,11 @@ while(this->currentPacket < this->totalPackets)
 	if (correctAddress == false)
 	{
 		std::cout<<"wrong destination address! discarding packets"<<std::endl;
+		for (int i = 0; i < 15; i++)
+		{
+			std::cout<<ptr[DESTINATION+i];
+		}
+		std::cout<<std::endl;
 	}
 	}
 }
@@ -171,19 +183,39 @@ return 0;
 void receiver::sendAnswer(uint8_t status, uint8_t message)
 {
 	std::cout<<"sending answer"<<std::endl;
-	usleep(500000);
+	//usleep(500);
 transmitter answer(this->datalines);
 dataFrame * frameptr;
-this->frame.head.source = this->address;
-
 frameptr = &this->frame;
+frameptr->head.source = this->address;
+frameptr->head.messageType[0] = status;
+convertLongToChar(1,frameptr->head.totalpacks,4);
+memset(frameptr->data.data,'0',sizeof(frame.data.data));
+frameptr->data.data[0] = message & 0xFF;
+
 std::cout<<"init frame"<<std::endl;
 answer.initFrame(this->frame.head.source, this->frame.head.destination, nullptr,frameptr);
 answer.setDataLen(frameptr,1);
-this->frame.head.messageType[0] = status;
-this->frame.data.data[0] = message;
+
+
+
+
+//frameptr->data.data[0] = 0xFF;
+
+
+//CREATE CRC
+std::cout<<"message: "<<int(message)<<" status: "<<int(status)<<std::endl;
+char* crcptr = nullptr;
+char* dataptr = nullptr;
+dataptr = frameptr->data.data;
+crcptr = makeCrc(dataptr,1);
+frameptr->CRC[0] = crcptr[0];
+frameptr->CRC[1] = crcptr[1];
+
+std::cout<<"answer crc 0: "<<frameptr->CRC[0]<<" answer crc 1: "<<frameptr->CRC[1]<<std::endl;
+
 std::cout<<"start sending frame"<<std::endl;
-answer.sendPacket(frameptr,this->datalines,1);
+answer.sendPacket(frameptr,this->datalines,1,1);
 std::cout<<"done"<<std::endl;
 }
 
@@ -199,17 +231,19 @@ this->totalPackets = converCharToLong(4,this->frame.head.totalpacks);
 return converCharToLong(4,this->frame.head.totalpacks);
 }
 
-void receiver::addPacketToMap()
+int receiver::addPacketToMap()
 {
 	long dataId = this->converCharToLong(4,this->frame.dataId);
 	auto iterator = dataStorage.find(dataId);
 	if (iterator == dataStorage.end())
 	{
 	this->dataStorage[dataId] = this->frame.data.dataptr;
+	return 0;
 	}
 	else
 	{
 		std::cerr<<"data id is already in storage"<<std::endl;
+		return -1;
 	}
 	//if data end of transmission is set
 	//check all packets are arrived;

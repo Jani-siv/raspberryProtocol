@@ -24,6 +24,7 @@
 #include <string.h>
 #include <chrono>
 #include "frame.h"
+#define DELAYSPEED 10000
 
 
 class gpio {

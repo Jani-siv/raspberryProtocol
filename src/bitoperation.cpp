@@ -58,7 +58,7 @@ while (num > 0 || i < size)
 	data[i] = num & 0xFF;
 	num = (num >> 8);
 	i++;
-	std::cout<<"from bit operation: "<<data[i]<<std::endl;
+	//std::cout<<"from bit operation: "<<data[i]<<std::endl;
 }
 }
 
@@ -72,6 +72,6 @@ while (num > 0 || i < size)
 	data[i] = num & 0xFF;
 	num = (num >> 8);
 	i++;
-	std::cout<<"from bit operation: "<<data[i]<<std::endl;
+	//std::cout<<"from bit operation: "<<data[i]<<std::endl;
 }
 }

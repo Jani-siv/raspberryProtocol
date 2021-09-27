@@ -45,7 +45,7 @@ private:
 	char* fileptr = nullptr;
 	std::ofstream file;
 	void createFile();
-	void addPacketToMap();
+	int addPacketToMap();
 	void testPacketsInMap();
 	long addTotalAmount();
 	void updateCurrentPacket();
@@ -61,6 +61,7 @@ public:
 	int calcNum(char* num);
 	int timeouttime =5;
 	dataFrame frame;
+	bool waitingAnswer = false;
 };
 
 #endif /* RECEIVER_H_ */
