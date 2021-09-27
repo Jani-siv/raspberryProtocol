@@ -26,19 +26,19 @@ void gpio::writeData(uint8_t data)
 		if (temp > 0)
 		{
 		this->outputdata.values[0] =255;
-		std::cout<<"1";//<<int(outputdata.values[0]);
+	//	std::cout<<"1";//<<int(outputdata.values[0]);
 		}
 		else
 		{
 			this->outputdata.values[0] = 0;
-			std::cout<<"0";//<<int(outputdata.values[0]);
+		//	std::cout<<"0";//<<int(outputdata.values[0]);
 		}
 		ret = ioctl(this->output.fd, GPIOHANDLE_SET_LINE_VALUES_IOCTL, &this->outputdata);
 		data = data << 1;
 		/*TODO create real sleep function to set speed*/
-		usleep(5000);
+		usleep(DELAYSPEED);
 	}
-std::cout<<std::endl;
+//std::cout<<std::endl;
 }
 char* gpio::readData(int bytes, int timeout)
 {
@@ -50,6 +50,7 @@ char* gpio::readData(int bytes, int timeout)
 	ptr = (char*)malloc(bytes*sizeof(char));
 	if (this->busSpeed.inputspeed == 0)
 	{
+		std::cout<<"getting bus speed"<<std::endl;
 this->getTiming(timeout);
 	}
 if (this->timeout == true)
@@ -74,11 +75,11 @@ int j= 0;
 						datablock = datablock << 1;
 
 					}
-				std::cout<<"1";
+			//	std::cout<<"1";
 			}
 			else
 			{
-				std::cout<<"0";
+			//	std::cout<<"0";
 				if (i < 7)
 					{
 
@@ -96,7 +97,7 @@ int j= 0;
 			ptrerror = &error;
 			return ptrerror;
 		}
-		std::cout<<" "<<ptr[j]<<std::endl;
+	//	std::cout<<" "<<ptr[j]<<std::endl;
 	//	std::cout<<"data block: "<<j<<" is stored in memory"<<std::endl;
 		j++;
 		bytes--;
@@ -109,18 +110,19 @@ void gpio::getTiming(int timeout)
 {
 	std::chrono::duration<double> diff, timeout1;
 
-
 	auto end = std::chrono::high_resolution_clock::now();
 	auto timeoutEnd = std::chrono::high_resolution_clock::now();
 	bool startTiming = false;
 
 	while (startTiming == false)
 	{
+
 		ioctl(this->input.fd, GPIOHANDLE_GET_LINE_VALUES_IOCTL, &this->inputdata);
 		//std::cout<<int(inputdata.values[0])<<std::endl;
 		if (inputdata.values[0] > 0)
 		{
 			auto start =std::chrono::high_resolution_clock::now();
+			startTiming = true;
 		while (inputdata.values[0] > 0)
 		{
 		//	std::cout<<int(inputdata.values[0])<<std::endl;
@@ -137,8 +139,8 @@ void gpio::getTiming(int timeout)
 			std::cout<<"reading speed is: "<<this->busSpeed.inputspeed<<std::endl;
 			std::cout<<"reading speed is: "<<diff.count()<<std::endl;
 			//skip rest of timing
-			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.4));
-			this->busSpeed.inputspeed -= this->busSpeed.inputspeed %5000; //350 ;)
+			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.5));
+			this->busSpeed.inputspeed -= this->busSpeed.inputspeed %DELAYSPEED; //350 ;)
 			break;
 		}
 		if (startTiming == false)
@@ -146,7 +148,7 @@ void gpio::getTiming(int timeout)
 		timeoutEnd = std::chrono::high_resolution_clock::now();
 		timeout1 = timeoutEnd - end;
 		double temp = timeout1.count();
-		//std::cout<<"temp: "<<temp<<std::endl;
+	//	std::cout<<"waiting time: "<<temp<<std::endl;
 		if (temp > timeout)
 		{
 			this->timeout = true;

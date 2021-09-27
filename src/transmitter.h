@@ -45,7 +45,7 @@ private:
 	void getPacketCount();
 	long getFileSize();
 	void calculateAmountOfPackets();
-	void createChunkAndSend(dataFrame* frame, gpio *transfer);
+	void createChunkAndSend(dataFrame* frame, gpio *transfer, int useExternalCrc);
 	gpio * dataline;
 	std::ifstream file;
 public:
@@ -54,7 +54,7 @@ public:
 	void setDataLen(dataFrame * frame, long len);
 	char* reserveMem(int len);
 	void initFrame(char* source, char* destination, char* filename, dataFrame* frame);
-	void sendPacket(dataFrame* frame, gpio *transfer, int type);
+	void sendPacket(dataFrame* frame, gpio *transfer, int type, int useExternalCrc);
 	void initTransmission(char* filename);
 	void printFrame(dataFrame *f);
 	dataFrame frame;

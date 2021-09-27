@@ -98,7 +98,7 @@ sleep(10);*/
 	receiver *res = new receiver(souptr, fileptr, resCreate);
 	if(answer == 0)
 	{
-	sender->sendPacket(local, resCreate,0);
+	sender->sendPacket(local, resCreate,0,0);
 	}
 	//receiver part
 	else

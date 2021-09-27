@@ -120,6 +120,7 @@ convertLongToChar(len,lenptr,4);
 
 void transmitter::createCRC(dataFrame * frame)
 {
+
 char *ptr = nullptr;
 long currentSize;
 auto it = this->datalen.find(this->position-1);
@@ -154,13 +155,13 @@ void transmitter::addDataId(dataFrame* frame,int i)
 
 //overflow possibility
 
-void transmitter::sendPacket(dataFrame* frame, gpio *transfer, int type)
+void transmitter::sendPacket(dataFrame* frame, gpio *transfer, int type, int useExternalCrc)
 {
 	if (type == 0)
 	{
 this->nextData(frame);
 	}
-this->createChunkAndSend(frame,transfer);
+this->createChunkAndSend(frame,transfer,useExternalCrc);
 //only for transmitter
 if (type == 0)
 {
@@ -171,7 +172,8 @@ if (type == 0)
 	char *addr;
 	addr = this->address;
 receiver res(addr,nullptr,this->dataline);
-res.timeouttime= 2;
+res.timeouttime= 3;
+res.waitingAnswer = true;
 int next = 0;
 std::cout<<"start waiting answer"<<std::endl;
 int breakWaiting = 0;
@@ -180,11 +182,27 @@ while (next != 1)
 {break;}
 	std::cout<<"waiting answer"<<std::endl;
 	next = res.transmission();
+	if (next == 1)
+	{
+		std::cout<<"message type from answer: "<<int(res.frame.head.messageType[0])<<std::endl;
+		std::cout<<"answering data from answer: "<<int(res.frame.data.data[0])<<std::endl;
+	}
+	if (res.frame.head.messageType[0] == 0x00)
+	{
+		std::cout<<"answer data: "<<int(res.frame.data.data[1])<<std::endl;
+		std::cout<<"exit from waiting"<<std::endl;
+		next = 1;
+		break;
+	}
 	breakWaiting++;
 if (next == -1)
 {
 	std::cout<<"sending packet again"<<std::endl;
-	createChunkAndSend(frame,transfer);
+	createChunkAndSend(frame,transfer,useExternalCrc);
+	if (res.frame.data.data[0] == 0xFF)
+	{
+		next = -1;
+	}
 }
 if (next == 0)
 {
@@ -197,9 +215,12 @@ this->position++;
 
 }
 }
-void transmitter::createChunkAndSend(dataFrame* frame, gpio *transfer)
+void transmitter::createChunkAndSend(dataFrame* frame, gpio *transfer, int useExternalCrc)
 {
-	createCRC(frame);
+	if (useExternalCrc != 1)
+	{
+		createCRC(frame);
+	}
 	//syn
 //std::cout<<"syn"<<std::endl;
 transfer->writeData(frame->head.asyn[0]);
@@ -249,7 +270,13 @@ for (int i = 0; i < amountBytes; i++)
 	{
 transfer->writeData(frame->data.dataptr[i]);
 	}
-//add CRC
+if (useExternalCrc == 1)
+{
+	for (int i = 0; i < 1; i++)
+		{
+	transfer->writeData(frame->data.dataptr[i]);
+		}
+}
 std::cout<<"CRC"<<std::endl;
 for (int i= 0; i < 2; i++)
 {
