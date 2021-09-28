@@ -57,7 +57,7 @@ sleep(10);*/
 	char dev1[] = "111.111.111.111";
 	char dev2[] = "222.222.222.222";
 	char device[] = "/dev/gpiochip0";
-	char file[] = "test.txt";
+	char file[] = "test.jpg";
 	char * desptr =nullptr;
 	char* souptr = nullptr;
 	char *fileptr;

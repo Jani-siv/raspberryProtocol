@@ -36,9 +36,18 @@ int receiver::setAllToFrame(char* ptr)
 		this->frame.head.messageType[i] = ptr[MESSAGETYPE+i];
 		this->frame.head.totalpacks[i] = ptr[TOTALPACKS+i];
 		this->frame.head.datalen[i] =	ptr[DATALEN+i];
+		std::cout<<"total packs"<<ptr[TOTALPACKS+i]<<std::endl;
 	}
+	unsigned long totalPacks = 0;
+	totalPacks = totalPacks << 8 | (this->frame.head.datalen[0] & 0xFF);
 
+	totalPacks = totalPacks << 8 | (this->frame.head.datalen[1] & 0xFF);
 
+	totalPacks = totalPacks << 8 | (this->frame.head.datalen[2] & 0XFF);
+
+	totalPacks = totalPacks << 8 | (this->frame.head.datalen[3] & 0xFF);
+	std::cout<<"total packs set in frame: "<<totalPacks<<std::endl;
+	this->totalPackets = 199;
 	//get data len
 	char* datalenptr;
 	datalenptr = this->frame.head.datalen;
@@ -56,9 +65,9 @@ std::cout<<"crc 0 in position:"<<DATA+datalen<<" "<<int(this->frame.CRC[0])<<" c
 	for (int i =0; i < datalen; i++)
 	{
 		this->frame.data.data[i] = ptr[DATA+i];
-		std::cout<<ptr[DATA+i]<<"position: "<<DATA+i<<std::endl;;
+
 	}
-	std::cout<<std::endl;
+
 	for(int i=0; i < 15; i++)
 	{
 	std::cout<<this->frame.head.destination[i];
@@ -140,10 +149,10 @@ while(this->currentPacket < this->totalPackets)
 		std::cout<<"data type was correct 0xff starting save data"<<std::endl;
 		//this section only for saving data
 		long tot =0;
-		this->addTotalAmount();
+
 		std::cout<<"total packs: "<<this->totalPackets<<std::endl;
 
-		this->updateCurrentPacket();
+		//this->updateCurrentPacket();
 		int packet = this->addPacketToMap();
 		if (packet == 0)
 			{
@@ -184,7 +193,9 @@ while(this->currentPacket < this->totalPackets)
 		std::cout<<std::endl;
 	}
 	}
+
 }
+std::cout<<"current pack: "<<this->currentPacket<<"total packs:"<<this->totalPackets<<std::endl;
 	std::cout<<"data ready"<<std::endl;
 return 0;
 
@@ -206,13 +217,7 @@ frameptr->data.data[0] = message & 0xFF;
 std::cout<<"init frame"<<std::endl;
 answer.initFrame(this->frame.head.source, this->frame.head.destination, nullptr,frameptr);
 answer.setDataLen(frameptr,1);
-
-
-
-
-//frameptr->data.data[0] = 0xFF;
-
-
+convertLongToChar(1,frameptr->head.datalen,4);
 //CREATE CRC
 std::cout<<"message: "<<int(message)<<" status: "<<int(status)<<std::endl;
 char* crcptr = nullptr;
@@ -237,8 +242,7 @@ void receiver::updateCurrentPacket()
 
 long receiver::addTotalAmount()
 {
-this->totalPackets = converCharToLong(4,this->frame.head.totalpacks);
-return converCharToLong(4,this->frame.head.totalpacks);
+return 0;
 }
 
 int receiver::addPacketToMap()

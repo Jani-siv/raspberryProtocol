@@ -37,8 +37,8 @@ private:
 	bool dataNeedProcess = false;
 	char* dataptr = nullptr;
 	bool dataPackedNum = 0;
-	long totalPackets =0;
-	long currentPacket = -1;
+	long totalPackets =1;
+	long currentPacket = 0;
 	std::map<int,char*> dataStorage;
 	int setAllToFrame(char* ptr);
 	void storeDataToFile();

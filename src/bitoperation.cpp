@@ -28,6 +28,7 @@ for (int i=0; i < bytes; i++)
 	{
 	num = (num << 8);
 	}
+	std::cout<<"from bit operation: "<<num<<std::endl;
 }
 return num;
 }
@@ -44,6 +45,7 @@ for (int i=bytes-1; i > -1; i--)
 	{
 	num = (num << 8);
 	}
+	std::cout<<"from bit operation: "<<num<<std::endl;
 }
 return num;
 }
@@ -58,7 +60,7 @@ while (num > 0 || i < size)
 	data[i] = num & 0xFF;
 	num = (num >> 8);
 	i++;
-	//std::cout<<"from bit operation: "<<data[i]<<std::endl;
+	std::cout<<"from bit operation: "<<data[i]<<std::endl;
 }
 }
 
@@ -72,6 +74,6 @@ while (num > 0 || i < size)
 	data[i] = num & 0xFF;
 	num = (num >> 8);
 	i++;
-	//std::cout<<"from bit operation: "<<data[i]<<std::endl;
+	std::cout<<"from bit operation: "<<data[i]<<std::endl;
 }
 }

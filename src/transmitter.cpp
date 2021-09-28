@@ -243,6 +243,12 @@ void transmitter::createChunkAndSend(dataFrame* frame, gpio *transfer, int useEx
 	if (useExternalCrc != 1)
 	{
 		createCRC(frame);
+		convertLongToChar(this->amountOfPackets,frame->head.totalpacks,4);
+		std::cout<<"Total packets in transmitter: "<<amountOfPackets<<std::endl;
+		std::cout<<"packs"<<int(frame->head.totalpacks[0])<<std::endl;
+		std::cout<<"packs"<<frame->head.totalpacks[1]<<std::endl;
+		std::cout<<"packs"<<frame->head.totalpacks[2]<<std::endl;
+		std::cout<<"packs"<<frame->head.totalpacks[3]<<std::endl;
 	}
 	//syn
 //std::cout<<"syn"<<std::endl;
@@ -273,8 +279,17 @@ transfer->writeData(frame->head.messageType[i]);
 //std::cout<<"total packs"<<std::endl;
 for (int i = 0; i < 4; i++)
 	{
-transfer->writeData(frame->head.totalpacks[i]);
+	std::cout<<frame->head.totalpacks[i];
+transfer->writeData(int(frame->head.totalpacks[i]));
 	}
+std::cout<<std::endl;
+//only used in answer
+if (useExternalCrc == 1)
+{
+	this->lastPacketSize = 1;
+	this->position = this->amountOfPackets;
+}
+
 //std::cout<<"datalen"<<std::endl;
 if (this->position >= this->amountOfPackets)
 {
@@ -298,21 +313,14 @@ for (int i = 0; i < amountBytes; i++)
 	{
 transfer->writeData(frame->data.dataptr[i]);
 	}
-if (useExternalCrc == 1)
-{
-	for (int i = 0; i < 1; i++)
-		{
-	transfer->writeData(frame->data.dataptr[i]);
-		}
-}
+
 std::cout<<"CRC"<<std::endl;
-if (useExternalCrc != 1)
-{
+
 for (int i= 0; i < 2; i++)
 {
 	transfer->writeData(frame->CRC[i]);
 }
-}
+
 //std::cout<<"end byte"<<std::endl;
 transfer->writeData(frame->head.endOfTransmission[0]);
 

@@ -23,7 +23,7 @@ typedef struct header{
 	char* source = nullptr;				//where to send	let's use 	ip 123.123.123.123 	15 bytes
 	char* destination = nullptr;		//where it coming from		ip 124.124.124.124 	15 bytes
 	char messageType[4];				//long answer / transmission					4 bytes
-	unsigned char totalpacks[4];			//total amount of packets	(long)						4 bytes
+	char totalpacks[4];			//total amount of packets	(long)						4 bytes
 	char datalen[4];			//length of data			(long)						4 bytes
 	char endOfTransmission[1];	//last packed 0xFF is end								1 bytes
 }header;
@@ -34,7 +34,7 @@ typedef struct header{
  * 50 bytes to data
  */
 typedef struct dataFrame{
-	unsigned char dataId[4];	//(long)
+	char dataId[4];	//(long)
 	char CRC[2];
 	header head;
 	dataPack data;
