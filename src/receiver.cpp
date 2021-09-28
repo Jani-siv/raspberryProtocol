@@ -43,17 +43,20 @@ int receiver::setAllToFrame(char* ptr)
 	char* datalenptr;
 	datalenptr = this->frame.head.datalen;
 	long datalen = converCharToLong(4,datalenptr);
-	std::cout<<"data len: "<<datalen<<std::endl;
+	std::cout<<"data len: "<<datalen<< " in position: "<<ptr[DATALEN]<<std::endl;
+	std::cout<<"data len: "<<datalen<< " in position: "<<ptr[DATALEN+1]<<std::endl;
+	std::cout<<"data len: "<<datalen<< " in position: "<<ptr[DATALEN+2]<<std::endl;
+	std::cout<<"data len: "<<datalen<< " in position: "<<ptr[DATALEN+3]<<std::endl;
 	this->frame.CRC[0] = ptr[(DATA+datalen)] & 0xFF;
 	this->frame.CRC[1] = ptr[(DATA+datalen+1)] & 0xFF;
 	this->frame.head.endOfTransmission[0] = ptr[(DATA+datalen+2)];
 
 
-std::cout<<"crc 0"<<int(this->frame.CRC[0])<<" crc 1 "<<int(this->frame.CRC[1])<<"end transmiss... : "<<int(this->frame.head.endOfTransmission[0])<<std::endl;
+std::cout<<"crc 0 in position:"<<DATA+datalen<<" "<<int(this->frame.CRC[0])<<" crc 1 int position: "<<DATA+datalen+1<<" "<<int(this->frame.CRC[1])<<"end transmiss... : "<<int(this->frame.head.endOfTransmission[0])<<std::endl;
 	for (int i =0; i < datalen; i++)
 	{
 		this->frame.data.data[i] = ptr[DATA+i];
-		std::cout<<ptr[DATA+i];
+		std::cout<<ptr[DATA+i]<<"position: "<<DATA+i<<std::endl;;
 	}
 	std::cout<<std::endl;
 	for(int i=0; i < 15; i++)
@@ -90,7 +93,7 @@ while(this->currentPacket < this->totalPackets)
 
 	char *ptr = nullptr;
 	this->datalines->busSpeed.inputspeed = 0;
-	ptr = this->datalines->readData(100,this->timeouttime);
+	ptr = this->datalines->readData(101,this->timeouttime);
 	this->datalines->busSpeed.inputspeed = 0;
 	//timeout
 	if (ptr == nullptr)
@@ -146,8 +149,8 @@ while(this->currentPacket < this->totalPackets)
 			{
 			this->createFile();
 			//copy only length of data
-
-			this->file << this->frame.data.data;
+			long datalen = converCharToLong(4,this->frame.head.datalen);
+			this->file.write(this->frame.data.data,datalen);
 
 			this->file.close();
 			memset(this->frame.data.data,'0',sizeof(this->frame.data.data));

@@ -23,7 +23,8 @@ std::cout<<"file open normally"<<std::endl;
 this->size = this->getFileSize();
 std::cout<<"size:"<<this->size<<std::endl;
 this->calculateAmountOfPackets();
-std::cout<<"amounts of full packets: "<<this->amountOfPackets<<std::endl;
+this->amountOfPackets++;
+std::cout<<"amounts packets: "<<this->amountOfPackets<<std::endl;
 std::cout<<"last packet size: "<<this->lastPacketSize<<std::endl;
 //set packets id and size in map
 for (long i=0; i <= this->amountOfPackets; i++)
@@ -36,6 +37,10 @@ for (long i=0; i <= this->amountOfPackets; i++)
 	{
 		this->datalen[i] = this->size;
 	}
+}
+if (this->lastPacketSize > 2)
+{
+	this->lastPacketSize -= 2;
 }
 convertLongToChar(this->amountOfPackets,this->frame.head.totalpacks,4);
 
@@ -134,6 +139,10 @@ else
 {
 currentSize = BLOCKSIZE;
 }
+if (this->position == this->amountOfPackets)
+{
+	currentSize = this->lastPacketSize;
+}
 std::cout<<"current size in create CRC: "<<currentSize<<std::endl;
 	ptr =makeCrc(frame->data.dataptr,currentSize);
 	std::cout<<frame->data.dataptr<<std::endl;
@@ -171,7 +180,7 @@ this->createChunkAndSend(frame,transfer,useExternalCrc);
 //only for transmitter
 if (type == 0)
 {
-	while (this->position < this->amountOfPackets+1)
+	while (this->position < this->amountOfPackets)
 	{
 		while (this->waitAnswer(frame,transfer,type) < 0)
 		{
@@ -267,6 +276,10 @@ for (int i = 0; i < 4; i++)
 transfer->writeData(frame->head.totalpacks[i]);
 	}
 //std::cout<<"datalen"<<std::endl;
+if (this->position >= this->amountOfPackets)
+{
+	convertLongToChar(this->lastPacketSize,frame->head.datalen,4);
+}
 for (int i = 0; i < 4; i++)
 	{
 transfer->writeData(frame->head.datalen[i]);
@@ -279,6 +292,7 @@ if (this->position < this->amountOfPackets)
 else {
 	amountBytes = this->lastPacketSize;
 }
+std::cout<<"bytes to send: "<<amountBytes<<" data len to send: "<<converCharToLong(4,frame->head.datalen)<<std::endl;
 //std::cout<<"data: "<<frame->data.dataptr<<std::endl;
 for (int i = 0; i < amountBytes; i++)
 	{
@@ -292,11 +306,13 @@ if (useExternalCrc == 1)
 		}
 }
 std::cout<<"CRC"<<std::endl;
+if (useExternalCrc != 1)
+{
 for (int i= 0; i < 2; i++)
 {
 	transfer->writeData(frame->CRC[i]);
 }
-
+}
 //std::cout<<"end byte"<<std::endl;
 transfer->writeData(frame->head.endOfTransmission[0]);
 
