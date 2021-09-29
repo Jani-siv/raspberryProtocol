@@ -139,12 +139,15 @@ void gpio::getTiming(int timeout)
 
 			std::cout<<"reading speed is: "<<this->busSpeed.inputspeed<<std::endl;
 			std::cout<<"reading speed is: "<<diff.count()<<std::endl;
+			this->timeout = false;
+			std::cout<<"timeout is: "<<this->timeout<<std::endl;
 			//skip rest of timing
 			usleep(7*this->busSpeed.inputspeed+(this->busSpeed.inputspeed*0.5));
 			this->busSpeed.inputspeed -= this->busSpeed.inputspeed %DELAYSPEED; //350 ;)
+
 			break;
 		}
-		if (startTiming == false)
+		if (startTiming == false && this->busSpeed.inputspeed == 0)
 		{
 		timeoutEnd = std::chrono::high_resolution_clock::now();
 		timeout1 = timeoutEnd - end;

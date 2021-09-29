@@ -24,11 +24,11 @@ for (int i=0; i < bytes; i++)
 {
 	num += data[i];
 	//skip last bit shift
-	if (i != 0)
+	if (i < bytes-1)
 	{
 	num = (num << 8);
 	}
-	std::cout<<"from bit operation: "<<num<<std::endl;
+//	std::cout<<"from bit operation: "<<num<<std::endl;
 }
 return num;
 }
@@ -45,7 +45,7 @@ for (int i=bytes-1; i > -1; i--)
 	{
 	num = (num << 8);
 	}
-	std::cout<<"from bit operation: "<<num<<std::endl;
+	//std::cout<<"from bit operation: "<<num<<std::endl;
 }
 return num;
 }
@@ -54,13 +54,13 @@ void bitoperation::convertLongToChar(long num, unsigned char* data, int size)
 {
 //for (int i = 0; i < size; i++)
 
-int i=0;
-while (num > 0 || i < size)
+int i=size-1;
+while (num > 0)
 	{
 	data[i] = num & 0xFF;
 	num = (num >> 8);
-	i++;
-	std::cout<<"from bit operation: "<<data[i]<<std::endl;
+	i--;
+//	std::cout<<"from bit operation: "<<data[i]<<std::endl;
 }
 }
 
@@ -74,6 +74,6 @@ while (num > 0 || i < size)
 	data[i] = num & 0xFF;
 	num = (num >> 8);
 	i++;
-	std::cout<<"from bit operation: "<<data[i]<<std::endl;
+	//std::cout<<"from bit operation: "<<data[i]<<std::endl;
 }
 }

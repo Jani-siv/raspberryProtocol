@@ -51,7 +51,7 @@ private:
 	void updateCurrentPacket();
 	void sendAnswer(uint8_t status, uint8_t message);
 	gpio *datalines;
-	bool timeout = false;
+
 public:
 	receiver(char* address, char *filename, gpio * datalines);
 	virtual ~receiver(){};
@@ -61,6 +61,7 @@ public:
 	int calcNum(char* num);
 	int timeouttime =20;
 	dataFrame frame;
+	bool timeout = false;
 	bool waitingAnswer = false;
 };
 

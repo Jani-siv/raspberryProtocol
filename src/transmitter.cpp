@@ -167,7 +167,7 @@ void transmitter::addDataId(dataFrame* frame,int i)
 
 //overflow possibility
 
-void transmitter::sendPacket(dataFrame* frame, gpio *transfer, int type, int useExternalCrc)
+int transmitter::sendPacket(dataFrame* frame, gpio *transfer, int type, int useExternalCrc)
 {
 	if (type == 0)
 	{
@@ -178,6 +178,7 @@ this->nextData(frame);
 	}
 this->createChunkAndSend(frame,transfer,useExternalCrc);
 //only for transmitter
+int breakloop = 0;
 if (type == 0)
 {
 	while (this->position < this->amountOfPackets)
@@ -185,12 +186,22 @@ if (type == 0)
 		while (this->waitAnswer(frame,transfer,type) < 0)
 		{
 			this->createChunkAndSend(frame,transfer,type);
+			breakloop++;
+			if (breakloop >= 5)
+			{
+				std::cerr<<"Connection time out no answer.."<<std::endl;
+				return -1;
+			}
 		}
 		this->nextData(frame);
 		this->createChunkAndSend(frame,transfer,type);
+
+		breakloop = 0;
 	}
 	this->waitAnswer(frame,transfer,type);
+
 }
+return 0;
 }
 
 int transmitter::waitAnswer(dataFrame* frame, gpio *transfer, int useExternalCrc)
@@ -198,29 +209,33 @@ int transmitter::waitAnswer(dataFrame* frame, gpio *transfer, int useExternalCrc
 	char *addr;
 	addr = this->address;
 	receiver res(addr,nullptr,this->dataline);
-	res.timeouttime= 5;
+	res.timeouttime= 7;
 	res.waitingAnswer = true;
 	int next = 0;
 	std::cout<<"start waiting answer"<<std::endl;
 	int breakWaiting = 0;
 	while (next != 1)
 	{
-		if (breakWaiting > 5) {break;}
+		if (breakWaiting >= 2) {
+			std::cout<<"connection timeout sending package again"<<std::endl;
+			return -1;
+		}
 		std::cout<<"waiting answer"<<std::endl;
 		next = res.transmission();
+		res.timeout = false;
 
 		if (int(res.frame.data.data[0]) == -1)
 		{
 			std::cout<<"answer data: "<<int(res.frame.data.data[0])<<std::endl;
-			std::cout<<"resending packets"<<std::endl;
+			std::cout<<"data error in package.. re-sending packets"<<std::endl;
 			return -1;
-			breakWaiting = 0;
 		}
 		breakWaiting++;
 
 
 	if (next == 1)
 	{
+		std::cout<<"Packet delivered successfully"<<std::endl;
 		return 0;
 	}
 	}
@@ -244,11 +259,7 @@ void transmitter::createChunkAndSend(dataFrame* frame, gpio *transfer, int useEx
 	{
 		createCRC(frame);
 		convertLongToChar(this->amountOfPackets,frame->head.totalpacks,4);
-		std::cout<<"Total packets in transmitter: "<<amountOfPackets<<std::endl;
-		std::cout<<"packs"<<int(frame->head.totalpacks[0])<<std::endl;
-		std::cout<<"packs"<<frame->head.totalpacks[1]<<std::endl;
-		std::cout<<"packs"<<frame->head.totalpacks[2]<<std::endl;
-		std::cout<<"packs"<<frame->head.totalpacks[3]<<std::endl;
+
 	}
 	//syn
 //std::cout<<"syn"<<std::endl;
@@ -280,7 +291,7 @@ transfer->writeData(frame->head.messageType[i]);
 for (int i = 0; i < 4; i++)
 	{
 	std::cout<<frame->head.totalpacks[i];
-transfer->writeData(int(frame->head.totalpacks[i]));
+transfer->writeData(frame->head.totalpacks[i]);
 	}
 std::cout<<std::endl;
 //only used in answer

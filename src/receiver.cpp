@@ -38,24 +38,16 @@ int receiver::setAllToFrame(char* ptr)
 		this->frame.head.datalen[i] =	ptr[DATALEN+i];
 		std::cout<<"total packs"<<ptr[TOTALPACKS+i]<<std::endl;
 	}
-	unsigned long totalPacks = 0;
-	totalPacks = totalPacks << 8 | (this->frame.head.datalen[0] & 0xFF);
+	long totalPacks = 0;
 
-	totalPacks = totalPacks << 8 | (this->frame.head.datalen[1] & 0xFF);
+	totalPacks = converCharToLong(4,this->frame.head.totalpacks);
 
-	totalPacks = totalPacks << 8 | (this->frame.head.datalen[2] & 0XFF);
-
-	totalPacks = totalPacks << 8 | (this->frame.head.datalen[3] & 0xFF);
 	std::cout<<"total packs set in frame: "<<totalPacks<<std::endl;
-	this->totalPackets = 199;
+	this->totalPackets = totalPacks;
 	//get data len
 	char* datalenptr;
 	datalenptr = this->frame.head.datalen;
 	long datalen = converCharToLong(4,datalenptr);
-	std::cout<<"data len: "<<datalen<< " in position: "<<ptr[DATALEN]<<std::endl;
-	std::cout<<"data len: "<<datalen<< " in position: "<<ptr[DATALEN+1]<<std::endl;
-	std::cout<<"data len: "<<datalen<< " in position: "<<ptr[DATALEN+2]<<std::endl;
-	std::cout<<"data len: "<<datalen<< " in position: "<<ptr[DATALEN+3]<<std::endl;
 	this->frame.CRC[0] = ptr[(DATA+datalen)] & 0xFF;
 	this->frame.CRC[1] = ptr[(DATA+datalen+1)] & 0xFF;
 	this->frame.head.endOfTransmission[0] = ptr[(DATA+datalen+2)];
@@ -204,7 +196,7 @@ return 0;
 void receiver::sendAnswer(uint8_t status, uint8_t message)
 {
 	std::cout<<"sending answer"<<std::endl;
-	usleep(200000);
+	usleep(300000);
 transmitter answer(this->datalines);
 dataFrame * frameptr;
 frameptr = &this->frame;
