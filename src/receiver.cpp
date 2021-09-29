@@ -36,24 +36,30 @@ int receiver::setAllToFrame(char* ptr)
 		this->frame.head.messageType[i] = ptr[MESSAGETYPE+i];
 		this->frame.head.totalpacks[i] = ptr[TOTALPACKS+i];
 		this->frame.head.datalen[i] =	ptr[DATALEN+i];
+		std::cout<<"total packs"<<ptr[TOTALPACKS+i]<<std::endl;
 	}
+	long totalPacks = 0;
 
+	totalPacks = converCharToLong(4,this->frame.head.totalpacks);
 
+	std::cout<<"total packs set in frame: "<<totalPacks<<std::endl;
+	this->totalPackets = totalPacks;
 	//get data len
 	char* datalenptr;
 	datalenptr = this->frame.head.datalen;
 	long datalen = converCharToLong(4,datalenptr);
-	std::cout<<"data len: "<<datalen<<std::endl;
 	this->frame.CRC[0] = ptr[(DATA+datalen)] & 0xFF;
 	this->frame.CRC[1] = ptr[(DATA+datalen+1)] & 0xFF;
 	this->frame.head.endOfTransmission[0] = ptr[(DATA+datalen+2)];
 
 
-std::cout<<"crc 0"<<int(this->frame.CRC[0])<<" crc 1 "<<int(this->frame.CRC[1])<<"end transmiss... : "<<int(this->frame.head.endOfTransmission[0])<<std::endl;
+std::cout<<"crc 0 in position:"<<DATA+datalen<<" "<<int(this->frame.CRC[0])<<" crc 1 int position: "<<DATA+datalen+1<<" "<<int(this->frame.CRC[1])<<"end transmiss... : "<<int(this->frame.head.endOfTransmission[0])<<std::endl;
 	for (int i =0; i < datalen; i++)
 	{
 		this->frame.data.data[i] = ptr[DATA+i];
+
 	}
+
 	for(int i=0; i < 15; i++)
 	{
 	std::cout<<this->frame.head.destination[i];
@@ -70,7 +76,7 @@ std::cout<<"crc 0"<<int(this->frame.CRC[0])<<" crc 1 "<<int(this->frame.CRC[1])<
 		std::cout<<"data is valid"<<std::endl;
 	}
 	else {
-		std::cout<<"data is corrupted: "<<crcValue<<std::endl;
+		std::cerr<<"data is corrupted: "<<crcValue<<std::endl;
 		return -1;
 	}
 	//store data in map
@@ -88,7 +94,7 @@ while(this->currentPacket < this->totalPackets)
 
 	char *ptr = nullptr;
 	this->datalines->busSpeed.inputspeed = 0;
-	ptr = this->datalines->readData(100,this->timeouttime);
+	ptr = this->datalines->readData(101,this->timeouttime);
 	this->datalines->busSpeed.inputspeed = 0;
 	//timeout
 	if (ptr == nullptr)
@@ -112,6 +118,7 @@ while(this->currentPacket < this->totalPackets)
 	{
 		uint8_t datatype = ptr[MESSAGETYPE];
 		int dataCRC = this->setAllToFrame(ptr);
+		std::cout<<"DATA: "<<this->frame.data.dataptr<<std::endl;
 		if (this->waitingAnswer == true)
 		{
 			//break answer waiting loop
@@ -133,17 +140,21 @@ while(this->currentPacket < this->totalPackets)
 	{
 		std::cout<<"data type was correct 0xff starting save data"<<std::endl;
 		//this section only for saving data
-		long tot = this->addTotalAmount();
-		std::cout<<"total packs: "<<tot<<std::endl;
+		long tot =0;
 
-		this->updateCurrentPacket();
+		std::cout<<"total packs: "<<this->totalPackets<<std::endl;
+
+		//this->updateCurrentPacket();
 		int packet = this->addPacketToMap();
 		if (packet == 0)
 			{
 			this->createFile();
 			//copy only length of data
-			this->file << this->frame.data.data;
+			long datalen = converCharToLong(4,this->frame.head.datalen);
+			this->file.write(this->frame.data.data,datalen);
+
 			this->file.close();
+			memset(this->frame.data.data,'0',sizeof(this->frame.data.data));
 			this->currentPacket++;
 			//answer to sender
 			//all OK
@@ -174,7 +185,9 @@ while(this->currentPacket < this->totalPackets)
 		std::cout<<std::endl;
 	}
 	}
+
 }
+std::cout<<"current pack: "<<this->currentPacket<<"total packs:"<<this->totalPackets<<std::endl;
 	std::cout<<"data ready"<<std::endl;
 return 0;
 
@@ -183,7 +196,7 @@ return 0;
 void receiver::sendAnswer(uint8_t status, uint8_t message)
 {
 	std::cout<<"sending answer"<<std::endl;
-	//usleep(500);
+	usleep(300000);
 transmitter answer(this->datalines);
 dataFrame * frameptr;
 frameptr = &this->frame;
@@ -196,13 +209,7 @@ frameptr->data.data[0] = message & 0xFF;
 std::cout<<"init frame"<<std::endl;
 answer.initFrame(this->frame.head.source, this->frame.head.destination, nullptr,frameptr);
 answer.setDataLen(frameptr,1);
-
-
-
-
-//frameptr->data.data[0] = 0xFF;
-
-
+convertLongToChar(1,frameptr->head.datalen,4);
 //CREATE CRC
 std::cout<<"message: "<<int(message)<<" status: "<<int(status)<<std::endl;
 char* crcptr = nullptr;
@@ -227,8 +234,7 @@ void receiver::updateCurrentPacket()
 
 long receiver::addTotalAmount()
 {
-this->totalPackets = converCharToLong(4,this->frame.head.totalpacks);
-return converCharToLong(4,this->frame.head.totalpacks);
+return 0;
 }
 
 int receiver::addPacketToMap()

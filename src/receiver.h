@@ -37,8 +37,8 @@ private:
 	bool dataNeedProcess = false;
 	char* dataptr = nullptr;
 	bool dataPackedNum = 0;
-	long totalPackets =0;
-	long currentPacket = -1;
+	long totalPackets =1;
+	long currentPacket = 0;
 	std::map<int,char*> dataStorage;
 	int setAllToFrame(char* ptr);
 	void storeDataToFile();
@@ -51,7 +51,7 @@ private:
 	void updateCurrentPacket();
 	void sendAnswer(uint8_t status, uint8_t message);
 	gpio *datalines;
-	bool timeout = false;
+
 public:
 	receiver(char* address, char *filename, gpio * datalines);
 	virtual ~receiver(){};
@@ -59,8 +59,9 @@ public:
 	int calclen(const char* len);
 	void copyDataToMemory(int len, char* data, int packedNum);
 	int calcNum(char* num);
-	int timeouttime =5;
+	int timeouttime =20;
 	dataFrame frame;
+	bool timeout = false;
 	bool waitingAnswer = false;
 };
 
