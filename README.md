@@ -4,8 +4,9 @@ catch is to not use spi, uart or another ready protocol to transfer data. Only n
 data need be fully transferred even wires connection lost for while.
 CRC check needed do also in protocol
 
-Now this program send and save under 50 bytes message
+Now this program send and save using only 17 and 22 gpio pins.
+there's crc cheking and timeout for connection
 
-todo:
-slice input data in multiple packets
+
+Project is ready.
 
